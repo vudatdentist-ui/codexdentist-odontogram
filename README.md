@@ -102,6 +102,7 @@ Không gọi API trực tiếp ở mỗi lần click trong production. Nên debo
 | `defaultSelectedTeeth` | Danh sách răng được chọn ban đầu |
 | `onSelectionChange` | Trả về danh sách răng FDI đang chọn |
 | `readOnly` | Cho xem và chọn răng nhưng khóa thay đổi lâm sàng |
+| `embedded` | Ẩn header/footer thương hiệu khi nhúng vào ứng dụng khác |
 | `assetBaseUrl` | URL chứa bộ SVG đã sinh |
 | `brandHref`, `logoUrl` | Tùy chỉnh liên kết và logo |
 

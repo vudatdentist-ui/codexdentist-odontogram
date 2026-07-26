@@ -15,6 +15,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import styles from "./odontogram.module.css";
@@ -125,6 +126,7 @@ export type OdontogramProps = {
   brandHref?: string;
   defaultSelectedTeeth?: string[];
   defaultValue?: OdontogramData;
+  embedded?: boolean;
   logoUrl?: string;
   onChange?: (data: OdontogramData) => void;
   onSelectionChange?: (teeth: string[]) => void;
@@ -771,6 +773,7 @@ export function Odontogram({
   brandHref = "https://codexdentist.com",
   defaultSelectedTeeth,
   defaultValue,
+  embedded = false,
   logoUrl = "/icons/codexmed-icon.svg",
   onChange,
   onSelectionChange,
@@ -798,6 +801,7 @@ export function Odontogram({
   );
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
+  const hasMounted = useRef(false);
   const selectedTeeth = controlledSelectedTeeth
     ? normalizeSelectedTeeth(
         controlledSelectedTeeth,
@@ -824,6 +828,11 @@ export function Odontogram({
   };
 
   useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+
     onChange?.(
       createDataSnapshot(
         surfaceState,
@@ -1160,8 +1169,8 @@ export function Odontogram({
 
   return (
     <AssetBaseContext.Provider value={assetBaseUrl}>
-    <main className={styles.shell}>
-      <header className={styles.header}>
+    <main className={`${styles.shell} ${embedded ? styles.embedded : ""}`}>
+      {!embedded ? <header className={styles.header}>
         <a className={styles.brand} href={brandHref}>
           <img src={logoUrl} alt="" />
           <span>
@@ -1210,7 +1219,7 @@ export function Odontogram({
             <RotateCcw size={18} />
           </button>
         </div>
-      </header>
+      </header> : null}
 
       <section className={styles.toolbar} aria-label="Trạng thái bề mặt">
         <div className={styles.toolbarControls}>
@@ -1529,10 +1538,10 @@ export function Odontogram({
         </aside>
       </div>
 
-      <footer className={styles.footer}>
+      {!embedded ? <footer className={styles.footer}>
         <span>MODBL · FDI surface model</span>
         <span>Prototype · Không dùng thay thế chẩn đoán lâm sàng</span>
-      </footer>
+      </footer> : null}
 
       {quickDiagnosisScope ? (
         <div

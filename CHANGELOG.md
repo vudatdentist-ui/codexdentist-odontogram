@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Add `embedded` mode for use inside an existing application shell.
+- Avoid emitting `onChange` before the user changes the chart.
+
 ## 0.2.0
 
 - Add controlled and uncontrolled tooth selection APIs.

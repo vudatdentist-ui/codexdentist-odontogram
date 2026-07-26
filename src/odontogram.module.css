@@ -12,6 +12,17 @@
   letter-spacing: 0;
 }
 
+.embedded {
+  min-height: 0;
+  border: 1px solid var(--od-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.embedded .workspace {
+  min-height: 0;
+}
+
 .shell,
 .shell * {
   box-sizing: border-box;
