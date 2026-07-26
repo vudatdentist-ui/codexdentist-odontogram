@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- Emit `onChange` only when the clinical snapshot actually changes, including
+  under React Strict Mode.
+
 ## 0.2.1
 
 - Add `embedded` mode for use inside an existing application shell.

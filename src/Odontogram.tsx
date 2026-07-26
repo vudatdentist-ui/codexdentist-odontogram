@@ -801,7 +801,7 @@ export function Odontogram({
   );
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
-  const hasMounted = useRef(false);
+  const lastNotifiedSnapshot = useRef(JSON.stringify(initialData));
   const selectedTeeth = controlledSelectedTeeth
     ? normalizeSelectedTeeth(
         controlledSelectedTeeth,
@@ -828,19 +828,19 @@ export function Odontogram({
   };
 
   useEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true;
+    const snapshot = createDataSnapshot(
+      surfaceState,
+      markerState,
+      bridges,
+      quickDiagnosis,
+    );
+    const serialized = JSON.stringify(snapshot);
+    if (serialized === lastNotifiedSnapshot.current) {
       return;
     }
+    lastNotifiedSnapshot.current = serialized;
 
-    onChange?.(
-      createDataSnapshot(
-        surfaceState,
-        markerState,
-        bridges,
-        quickDiagnosis,
-      ),
-    );
+    onChange?.(snapshot);
   }, [bridges, markerState, onChange, quickDiagnosis, surfaceState]);
 
   const commitSurfaceState = (
