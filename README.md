@@ -72,6 +72,7 @@ export function PatientOdontogram({
     <Odontogram
       defaultValue={initialData}
       onChange={save}
+      onSelectionChange={(teeth) => console.log("Selected teeth", teeth)}
       assetBaseUrl="/odontogram-assets"
     />
   );
@@ -90,6 +91,21 @@ hiện tại không cho phép import CSS package trong component.
 
 Không gọi API trực tiếp ở mỗi lần click trong production. Nên debounce
 `onChange` khoảng 500-1000 ms hoặc lưu nháp phía client rồi đồng bộ theo phiên.
+
+### Props tích hợp
+
+| Prop | Ý nghĩa |
+| --- | --- |
+| `defaultValue` | Snapshot được đọc khi component mount |
+| `onChange` | Trả về toàn bộ `OdontogramData` khi chart thay đổi |
+| `selectedTeeth` | Danh sách răng FDI được điều khiển bởi ứng dụng cha |
+| `defaultSelectedTeeth` | Danh sách răng được chọn ban đầu |
+| `onSelectionChange` | Trả về danh sách răng FDI đang chọn |
+| `readOnly` | Cho xem và chọn răng nhưng khóa thay đổi lâm sàng |
+| `assetBaseUrl` | URL chứa bộ SVG đã sinh |
+| `brandHref`, `logoUrl` | Tùy chỉnh liên kết và logo |
+
+`selectedTeeth` dùng mã FDI không có tiền tố `R`, ví dụ `["16", "21"]`.
 
 ## Tích hợp bằng iframe
 

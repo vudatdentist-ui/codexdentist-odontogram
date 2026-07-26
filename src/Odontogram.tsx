@@ -123,9 +123,13 @@ export type OdontogramData = {
 export type OdontogramProps = {
   assetBaseUrl?: string;
   brandHref?: string;
+  defaultSelectedTeeth?: string[];
   defaultValue?: OdontogramData;
   logoUrl?: string;
   onChange?: (data: OdontogramData) => void;
+  onSelectionChange?: (teeth: string[]) => void;
+  readOnly?: boolean;
+  selectedTeeth?: string[];
 };
 type HistoryEntry = {
   surfaceState: SurfaceState;
@@ -274,6 +278,14 @@ function emptyQuickDiagnosis(): QuickDiagnosisState {
 
 function isToothId(value: string): value is ToothId {
   return allTeeth.includes(value as ToothId);
+}
+
+function normalizeSelectedTeeth(
+  values: readonly string[] | undefined,
+  fallback: ToothId,
+) {
+  const teeth = [...new Set(values?.filter(isToothId) ?? [])];
+  return teeth.length > 0 ? teeth : [fallback];
 }
 
 function isConditionId(value: unknown): value is ConditionId {
@@ -757,9 +769,13 @@ function downloadJson(
 export function Odontogram({
   assetBaseUrl = "/odontogram-assets",
   brandHref = "https://codexdentist.com",
+  defaultSelectedTeeth,
   defaultValue,
   logoUrl = "/icons/codexmed-icon.svg",
   onChange,
+  onSelectionChange,
+  readOnly = false,
+  selectedTeeth: controlledSelectedTeeth,
 }: OdontogramProps) {
   const [initialData] = useState(() => normalizeDefaultValue(defaultValue));
   const [surfaceState, setSurfaceState] = useState<SurfaceState>(
@@ -777,10 +793,35 @@ export function Odontogram({
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [condition, setCondition] = useState<ConditionId>("caries");
   const [dentition, setDentition] = useState<Dentition>("adult");
-  const [selectedTeeth, setSelectedTeeth] = useState<ToothId[]>(["16"]);
+  const [internalSelectedTeeth, setInternalSelectedTeeth] = useState<ToothId[]>(
+    () => normalizeSelectedTeeth(defaultSelectedTeeth, "16"),
+  );
   const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
-  const selectedTooth = selectedTeeth.at(-1) ?? (dentition === "adult" ? "16" : "55");
+  const selectedTeeth = controlledSelectedTeeth
+    ? normalizeSelectedTeeth(
+        controlledSelectedTeeth,
+        dentition === "adult" ? "16" : "55",
+      )
+    : internalSelectedTeeth;
+  const selectedTooth =
+    selectedTeeth.at(-1) ?? (dentition === "adult" ? "16" : "55");
+
+  const setSelectedTeeth = (
+    update: ToothId[] | ((current: ToothId[]) => ToothId[]),
+  ) => {
+    const next =
+      typeof update === "function" ? update(selectedTeeth) : update;
+    const normalized = normalizeSelectedTeeth(
+      next,
+      dentition === "adult" ? "16" : "55",
+    );
+
+    if (!controlledSelectedTeeth) {
+      setInternalSelectedTeeth(normalized);
+    }
+    onSelectionChange?.(normalized);
+  };
 
   useEffect(() => {
     onChange?.(
@@ -921,7 +962,7 @@ export function Odontogram({
   };
 
   const setSurface = (tooth: ToothId, surface: SurfaceCode) => {
-    if (isToothUnavailable(markerState, tooth)) {
+    if (readOnly || isToothUnavailable(markerState, tooth)) {
       return;
     }
 
@@ -939,7 +980,7 @@ export function Odontogram({
   };
 
   const clearSurface = (tooth: ToothId, surface: SurfaceCode) => {
-    if (isToothUnavailable(markerState, tooth)) {
+    if (readOnly || isToothUnavailable(markerState, tooth)) {
       return;
     }
 
@@ -959,6 +1000,9 @@ export function Odontogram({
   };
 
   const toggleMarker = (marker: ClinicalMarkerId) => {
+    if (readOnly) {
+      return;
+    }
     const removeFromAll = selectedTeeth.every(
       (tooth) => markerState[markerKey(tooth, marker)] === true,
     );
@@ -990,7 +1034,7 @@ export function Odontogram({
   };
 
   const toggleBridge = () => {
-    if (!normalizedSelectedBridgeTeeth) {
+    if (readOnly || !normalizedSelectedBridgeTeeth) {
       return;
     }
 
@@ -1018,7 +1062,7 @@ export function Odontogram({
   };
 
   const toggleQuickDiagnosis = (groupId: string, value: string) => {
-    if (!quickDiagnosisScope) {
+    if (readOnly || !quickDiagnosisScope) {
       return;
     }
 
@@ -1041,6 +1085,7 @@ export function Odontogram({
   };
 
   const undo = () => {
+    if (readOnly) return;
     const last = history.at(-1);
     if (!last) return;
 
@@ -1052,6 +1097,7 @@ export function Odontogram({
   };
 
   const reset = () => {
+    if (readOnly) return;
     const label = dentition === "adult" ? "răng vĩnh viễn" : "răng sữa";
     if (
       (markedSurfaceCount === 0 &&
@@ -1135,13 +1181,13 @@ export function Odontogram({
         <div className={styles.headerActions}>
           <span className={styles.savedState}>
             <Check size={14} />
-            Sẵn sàng đồng bộ
+            {readOnly ? "Chỉ đọc" : "Sẵn sàng đồng bộ"}
           </span>
           <button
             className={styles.iconButton}
             type="button"
             onClick={undo}
-            disabled={history.length === 0}
+            disabled={readOnly || history.length === 0}
             aria-label="Hoàn tác"
             title="Hoàn tác"
           >
@@ -1152,6 +1198,7 @@ export function Odontogram({
             type="button"
             onClick={reset}
             disabled={
+              readOnly ||
               markedSurfaceCount === 0 &&
               markedMarkerCount === 0 &&
               activeBridges.length === 0 &&
@@ -1220,6 +1267,7 @@ export function Odontogram({
                 }
                 onClick={() => setCondition(option.id)}
                 aria-pressed={condition === option.id}
+                disabled={readOnly}
               >
                 <span style={{ backgroundColor: option.color }} />
                 <span className={styles.fullLabel}>{option.label}</span>
@@ -1263,6 +1311,7 @@ export function Odontogram({
             state={surfaceState}
             markerState={markerState}
             bridges={activeBridges}
+            readOnly={readOnly}
             diagnosisSummary={quickDiagnosisSummary(quickDiagnosis, "upper")}
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("upper")}
@@ -1284,6 +1333,7 @@ export function Odontogram({
             state={surfaceState}
             markerState={markerState}
             bridges={activeBridges}
+            readOnly={readOnly}
             diagnosisSummary={quickDiagnosisSummary(quickDiagnosis, "lower")}
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("lower")}
@@ -1342,7 +1392,7 @@ export function Odontogram({
                   state={surfaceState}
                   condition={condition}
                   large
-                  disabled={selectedToothUnavailable}
+                  disabled={readOnly || selectedToothUnavailable}
                   onSetSurface={setSurface}
                   onClearSurface={clearSurface}
                 />
@@ -1353,7 +1403,7 @@ export function Odontogram({
                   <button
                     key={surface}
                     type="button"
-                    disabled={selectedToothUnavailable}
+                    disabled={readOnly || selectedToothUnavailable}
                     onClick={() => setSurface(selectedTooth, surface)}
                   >
                     <span className={styles.surfaceCode}>{surface}</span>
@@ -1409,6 +1459,7 @@ export function Odontogram({
                     }
                     onClick={() => toggleMarker(marker.id)}
                     aria-pressed={partial ? "mixed" : active}
+                    disabled={readOnly}
                   >
                     <ClinicalMarkerPreview
                       tooth={selectedTooth}
@@ -1425,7 +1476,7 @@ export function Odontogram({
                   selectedBridge ? styles.clinicalMarkerActive : undefined
                 }
                 onClick={toggleBridge}
-                disabled={!bridgeAvailable}
+                disabled={readOnly || !bridgeAvailable}
                 aria-pressed={Boolean(selectedBridge)}
                 title={
                   bridgeAvailable
@@ -1561,6 +1612,7 @@ export function Odontogram({
                             toggleQuickDiagnosis(group.id, option.value)
                           }
                           aria-pressed={active}
+                          disabled={readOnly}
                         >
                           {option.label}
                         </button>
@@ -1585,6 +1637,7 @@ function Arch({
   state,
   markerState,
   bridges,
+  readOnly,
   diagnosisSummary,
   condition,
   onOpenDiagnosis,
@@ -1598,6 +1651,7 @@ function Arch({
   state: SurfaceState;
   markerState: MarkerState;
   bridges: BridgeSpan[];
+  readOnly: boolean;
   diagnosisSummary: string[];
   condition: ConditionId;
   onOpenDiagnosis: () => void;
@@ -1658,7 +1712,9 @@ function Arch({
               tooth={tooth}
               state={state}
               condition={condition}
-              disabled={isToothUnavailable(markerState, tooth)}
+              disabled={
+                readOnly || isToothUnavailable(markerState, tooth)
+              }
               onSetSurface={onSetSurface}
               onClearSurface={onClearSurface}
             />
