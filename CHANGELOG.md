@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+
+- Make embedded layouts respond to their host container width so the chart and
+  inspector do not overlap inside sidebars or constrained application shells.
+
 ## 0.2.2
 
 - Emit `onChange` only when the clinical snapshot actually changes, including

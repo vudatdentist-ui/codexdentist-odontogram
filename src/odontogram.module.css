@@ -17,10 +17,154 @@
   border: 1px solid var(--od-line);
   border-radius: 6px;
   overflow: hidden;
+  container-type: inline-size;
 }
 
 .embedded .workspace {
   min-height: 0;
+}
+
+@container (max-width: 1040px) {
+  .embedded .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .embedded .inspector {
+    display: grid;
+    grid-template-columns: 150px 190px minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    border-top: 1px solid var(--od-line);
+    border-left: 0;
+  }
+
+  .embedded .inspectorHeading {
+    display: block;
+  }
+
+  .embedded .inspectorHeading h2 {
+    font-size: 22px;
+  }
+
+  .embedded .inspectorHeading > strong {
+    display: inline-block;
+    margin-top: 7px;
+  }
+
+  .embedded .focusTooth {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    min-height: 150px;
+    margin: 0;
+    border: 1px solid var(--od-line);
+  }
+
+  .embedded .multiSelectionSummary {
+    grid-column: 2 / -1;
+    min-height: 150px;
+    margin: 0;
+    border: 1px solid var(--od-line);
+  }
+
+  .embedded .surfaceMapLarge {
+    width: 120px;
+  }
+
+  .embedded .surfaceList {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .embedded .clinicalMarkers,
+  .embedded .inspectorActions {
+    grid-column: 1 / -1;
+  }
+
+  .embedded .clinicalMarkerGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .embedded .toolbar,
+  .embedded .toolbarControls,
+  .embedded .conditionControl {
+    flex-wrap: wrap;
+  }
+
+  .embedded .toolbar {
+    align-items: flex-start;
+    padding-inline: 16px;
+  }
+
+  .embedded .toolbarStats {
+    margin-left: auto;
+  }
+
+  .embedded .inspectorActions {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 0;
+  }
+}
+
+@container (max-width: 820px) {
+  .embedded .toolbarControls {
+    display: grid;
+    gap: 8px;
+  }
+
+  .embedded .quickDiagnosisButton {
+    width: max-content;
+  }
+
+  .embedded .fullLabel {
+    display: none;
+  }
+
+  .embedded .shortLabel {
+    display: inline;
+  }
+
+  .embedded .chartPanel {
+    padding: 18px 12px 22px;
+  }
+
+  .embedded .teethRow {
+    grid-template-columns: repeat(8, minmax(42px, 1fr));
+    row-gap: 12px;
+  }
+
+  .embedded .teethRowPrimary {
+    grid-template-columns: repeat(10, minmax(30px, 1fr));
+    max-width: none;
+    row-gap: 0;
+  }
+
+  .embedded .beforeMidline {
+    margin-right: 0;
+  }
+
+  .embedded .beforeMidline::after,
+  .embedded .orientation {
+    display: none;
+  }
+
+  .embedded .teethRow:not(.teethRowPrimary) .toothCell:nth-child(9) {
+    margin-top: 2px;
+  }
+
+  .embedded .inspector {
+    grid-template-columns: 1fr 150px;
+    padding-inline: 16px;
+  }
+
+  .embedded .surfaceList,
+  .embedded .clinicalMarkers,
+  .embedded .inspectorActions {
+    grid-column: 1 / -1;
+  }
+
+  .embedded .surfaceList {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .shell,
