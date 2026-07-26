@@ -1,0 +1,6 @@
+node_modules/
+dist/
+demo-dist/
+public/odontogram-assets/
+*.tsbuildinfo
+*.log

@@ -1,0 +1,52 @@
+{
+  "name": "codexdentist-odontogram",
+  "version": "0.1.0",
+  "description": "Reusable FDI odontogram for React applications",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "LICENSE",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "bin": {
+    "codexdentist-odontogram-assets": "./bin/copy-assets.mjs"
+  },
+  "scripts": {
+    "dev": "node scripts/generate-odontogram-assets.mjs && vite",
+    "build": "node scripts/generate-odontogram-assets.mjs && vite build && tsc -p tsconfig.build.json && node scripts/copy-generated-to-dist.mjs",
+    "build:demo": "node scripts/generate-odontogram-assets.mjs && vite build --config vite.demo.config.ts",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@artidev/odontogram-core": "0.2.1",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}
