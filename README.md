@@ -10,8 +10,10 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 - Đánh dấu thân/chân trực tiếp trên chính ảnh giải phẫu hiện tại; vùng tô và
   hit target dùng đúng contour/viewBox của từng mẫu răng, không render thêm một
   hình răng thứ hai.
-- Thân/chân răng là phạm vi lâm sàng thực sự: ký hiệu phù hợp được bật theo
-  vùng đang chọn, còn ký hiệu toàn răng vẫn luôn khả dụng.
+- Mã màu trên sơ đồ 5 mặt chỉ dùng cho sâu răng, mối hàn và inlay/onlay.
+- Thân/chân răng là phạm vi lâm sàng thực sự: ký hiệu phù hợp, gồm sâu răng,
+  được áp dụng và hiển thị trên vùng đang chọn; thao tác chọn vùng không tự tô
+  màu hình răng.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu

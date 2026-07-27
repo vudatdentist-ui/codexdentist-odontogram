@@ -56,7 +56,7 @@ const allTeeth = [
   ...primaryLowerTeeth,
 ] as const;
 
-const conditionOptions = [
+const surfaceConditionOptions = [
   {
     id: "caries",
     label: "Sâu răng",
@@ -68,13 +68,27 @@ const conditionOptions = [
   },
   {
     id: "existing",
-    label: "Phục hồi hiện có",
-    shortLabel: "Hiện có",
+    label: "Mối hàn",
+    shortLabel: "Hàn",
     color: "#2878b5",
     conceptId: "restoration",
     kind: "restoration",
     status: "existing",
   },
+  {
+    id: "inlayOnlay",
+    label: "Inlay / Onlay",
+    shortLabel: "Inlay",
+    color: "#a86f16",
+    conceptId: "inlay-onlay",
+    kind: "restoration",
+    status: "existing",
+  },
+] as const;
+
+// Kept for backward compatibility with snapshots created before surface
+// conditions were narrowed to the three clinically visible color codes.
+const legacyConditionOptions = [
   {
     id: "planned",
     label: "Điều trị dự kiến",
@@ -95,7 +109,22 @@ const conditionOptions = [
   },
 ] as const;
 
+const conditionOptions = [
+  ...surfaceConditionOptions,
+  ...legacyConditionOptions,
+] as const;
+
 const clinicalMarkerOptions = [
+  {
+    id: "caries",
+    label: "Sâu răng",
+    shortLabel: "SR",
+    color: "#b4232b",
+    targets: ["crown", "root"],
+    defaultTarget: "crown",
+    kind: "condition",
+    status: "observed",
+  },
   {
     id: "pulpitis",
     label: "Viêm tủy",
@@ -402,12 +431,14 @@ const markerConflicts: Record<ClinicalMarkerId, ClinicalMarkerId[]> = {
     .filter((marker) => marker !== "missing" && marker !== "boneLoss"),
   implant: [
     "missing",
+    "caries",
     "pulpitis",
     "rootCanal",
     "periapical",
     "fracture",
     "extraction",
   ],
+  caries: ["missing", "implant"],
   pulpitis: ["missing", "implant"],
   rootCanal: ["missing", "implant"],
   crown: ["missing"],
@@ -1212,6 +1243,33 @@ function anatomyClipPath(
   } H${left} Z`;
 }
 
+function cariesLesionPath(
+  geometry: ToothAnatomyGeometry,
+  target: AnatomyZone,
+) {
+  const { width, height, cervicalY } = geometry;
+  const centerX = width * (target === "root" ? 0.44 : 0.58);
+  const centerY =
+    target === "root"
+      ? cervicalY * 0.56
+      : cervicalY + (height - cervicalY) * 0.46;
+  const radiusX = width * (target === "root" ? 0.11 : 0.16);
+  const radiusY = height * (target === "root" ? 0.08 : 0.1);
+
+  return [
+    `M${centerX - radiusX} ${centerY - radiusY * 0.15}`,
+    `C${centerX - radiusX * 0.8} ${centerY - radiusY},`,
+    `${centerX - radiusX * 0.05} ${centerY - radiusY * 1.08},`,
+    `${centerX + radiusX * 0.42} ${centerY - radiusY * 0.62}`,
+    `C${centerX + radiusX * 1.08} ${centerY - radiusY * 0.3},`,
+    `${centerX + radiusX * 0.95} ${centerY + radiusY * 0.58},`,
+    `${centerX + radiusX * 0.22} ${centerY + radiusY * 0.86}`,
+    `C${centerX - radiusX * 0.35} ${centerY + radiusY * 1.02},`,
+    `${centerX - radiusX * 1.08} ${centerY + radiusY * 0.58},`,
+    `${centerX - radiusX} ${centerY - radiusY * 0.15} Z`,
+  ].join(" ");
+}
+
 function toothArtworkPath(
   tooth: ToothId,
   assetBaseUrl: string,
@@ -1644,46 +1702,15 @@ export function Odontogram({
     });
   };
 
-  const toggleAnatomy = (tooth: ToothId, zone: AnatomyZone) => {
+  const selectAnatomy = (tooth: ToothId, zone: AnatomyZone) => {
     if (readOnly || isToothUnavailable(markerState, tooth)) {
       return;
     }
-
-    const key = anatomyKey(tooth, zone);
-    const previous = anatomyState[key];
 
     setSelectedTeeth((current) =>
       current.includes(tooth) ? current : [...current, tooth],
     );
     setSelectedAnatomyZone(zone);
-    saveHistory();
-    commitAnatomyState((current) => {
-      const next = { ...current };
-      if (previous === condition) {
-        delete next[key];
-      } else {
-        next[key] = condition;
-      }
-      return next;
-    });
-  };
-
-  const clearAnatomy = (tooth: ToothId, zone: AnatomyZone) => {
-    if (readOnly || isToothUnavailable(markerState, tooth)) {
-      return;
-    }
-
-    const key = anatomyKey(tooth, zone);
-    if (!anatomyState[key]) {
-      return;
-    }
-
-    saveHistory();
-    commitAnatomyState((current) => {
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
   };
 
   const toggleMarker = (marker: ClinicalMarkerId) => {
@@ -1982,7 +2009,7 @@ export function Odontogram({
             {quickDiagnosisCount > 0 ? <strong>{quickDiagnosisCount}</strong> : null}
           </button>
           <div className={styles.conditionControl}>
-            {conditionOptions.map((option) => (
+            {surfaceConditionOptions.map((option) => (
               <button
                 key={option.id}
                 type="button"
@@ -2003,7 +2030,6 @@ export function Odontogram({
         <div className={styles.toolbarStats}>
           <span><strong>{markedToothCount}</strong> răng</span>
           <span><strong>{markedSurfaceCount}</strong> mặt</span>
-          <span><strong>{markedAnatomyCount}</strong> vùng</span>
           <span><strong>{markedMarkerCount}</strong> dấu</span>
           <span><strong>{activeBridges.length}</strong> cầu</span>
         </div>
@@ -2034,7 +2060,6 @@ export function Odontogram({
             teeth={upperTeeth}
             selectedTeeth={selectedTeeth}
             state={surfaceState}
-            anatomyState={anatomyState}
             markerState={markerState}
             markerTargetState={markerTargetState}
             bridges={activeBridges}
@@ -2044,8 +2069,7 @@ export function Odontogram({
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("upper")}
             onSelectTooth={selectTooth}
-            onToggleAnatomy={toggleAnatomy}
-            onClearAnatomy={clearAnatomy}
+            onSelectAnatomy={selectAnatomy}
             onSetSurface={setSurface}
             onClearSurface={clearSurface}
           />
@@ -2061,7 +2085,6 @@ export function Odontogram({
             teeth={lowerTeeth}
             selectedTeeth={selectedTeeth}
             state={surfaceState}
-            anatomyState={anatomyState}
             markerState={markerState}
             markerTargetState={markerTargetState}
             bridges={activeBridges}
@@ -2071,8 +2094,7 @@ export function Odontogram({
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("lower")}
             onSelectTooth={selectTooth}
-            onToggleAnatomy={toggleAnatomy}
-            onClearAnatomy={clearAnatomy}
+            onSelectAnatomy={selectAnatomy}
             onSetSurface={setSurface}
             onClearSurface={clearSurface}
           />
@@ -2448,7 +2470,6 @@ function Arch({
   teeth,
   selectedTeeth,
   state,
-  anatomyState,
   markerState,
   markerTargetState,
   bridges,
@@ -2458,8 +2479,7 @@ function Arch({
   condition,
   onOpenDiagnosis,
   onSelectTooth,
-  onToggleAnatomy,
-  onClearAnatomy,
+  onSelectAnatomy,
   onSetSurface,
   onClearSurface,
 }: {
@@ -2467,7 +2487,6 @@ function Arch({
   teeth: readonly ToothId[];
   selectedTeeth: ToothId[];
   state: SurfaceState;
-  anatomyState: AnatomyState;
   markerState: MarkerState;
   markerTargetState: MarkerTargetState;
   bridges: BridgeSpan[];
@@ -2477,8 +2496,7 @@ function Arch({
   condition: ConditionId;
   onOpenDiagnosis: () => void;
   onSelectTooth: (tooth: ToothId) => void;
-  onToggleAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
-  onClearAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
+  onSelectAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
   onSetSurface: (tooth: ToothId, surface: SurfaceCode) => void;
   onClearSurface: (tooth: ToothId, surface: SurfaceCode) => void;
 }) {
@@ -2508,16 +2526,13 @@ function Arch({
           const figure = (
             <ToothIllustration
               tooth={tooth}
-              anatomyState={anatomyState}
               markerState={markerState}
               markerTargetState={markerTargetState}
-              condition={condition}
               readOnly={readOnly}
               selectedAnatomyZone={
                 selectedTeeth.includes(tooth) ? selectedAnatomyZone : null
               }
-              onToggleAnatomy={onToggleAnatomy}
-              onClearAnatomy={onClearAnatomy}
+              onSelectAnatomy={onSelectAnatomy}
               bridgeUnit={
                 bridge
                   ? {
@@ -2584,25 +2599,19 @@ function Arch({
 
 function ToothIllustration({
   tooth,
-  anatomyState,
   markerState,
   markerTargetState,
-  condition,
   readOnly,
   selectedAnatomyZone,
-  onToggleAnatomy,
-  onClearAnatomy,
+  onSelectAnatomy,
   bridgeUnit,
 }: {
   tooth: ToothId;
-  anatomyState: AnatomyState;
   markerState: MarkerState;
   markerTargetState: MarkerTargetState;
-  condition: ConditionId;
   readOnly: boolean;
   selectedAnatomyZone: AnatomyZone | null;
-  onToggleAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
-  onClearAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
+  onSelectAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
   bridgeUnit?: {
     first: boolean;
     last: boolean;
@@ -2637,6 +2646,10 @@ function ToothIllustration({
         : undefined;
   const anatomyGeometry = toothAnatomyGeometry(tooth);
   const anatomyClipId = `tooth-anatomy-${tooth}`;
+  const cariesTarget =
+    markerTargetState[markerKey(tooth, "caries")] === "root"
+      ? "root"
+      : "crown";
 
   return (
     <div
@@ -2679,53 +2692,44 @@ function ToothIllustration({
               </clipPath>
             ))}
           </defs>
+          {activeMarkers.includes("caries") ? (
+            <path
+              className={styles.markerCaries}
+              d={cariesLesionPath(anatomyGeometry, cariesTarget)}
+              clipPath={`url(#${anatomyClipId}-${cariesTarget})`}
+              vectorEffect="non-scaling-stroke"
+              aria-hidden="true"
+            />
+          ) : null}
           {(["root", "crown"] as const).map((zone) => {
-            const current = anatomyState[anatomyKey(tooth, zone)];
-            const currentCondition = conditionFor(current);
-            const label = `${anatomyNames[zone]} ${tooth}${
-              currentCondition ? `, ${currentCondition.label}` : ""
-            }. Chọn ${conditionFor(condition)?.label}.`;
+            const selected = selectedAnatomyZone === zone;
+            const label = `Chọn vùng ${anatomyNames[
+              zone
+            ].toLowerCase()} của răng ${tooth} làm phạm vi ký hiệu lâm sàng.`;
             const zonePath = anatomyClipPath(anatomyGeometry, zone);
 
             return (
               <g key={zone}>
                 <path
                   className={styles.toothAnatomyZone}
-                  data-active={current ? "true" : "false"}
-                  data-selected={selectedAnatomyZone === zone ? "true" : "false"}
+                  data-selected={selected ? "true" : "false"}
                   data-zone={zone}
                   d={zonePath}
                   clipPath={`url(#${anatomyClipId}-outline)`}
                   vectorEffect="non-scaling-stroke"
-                  style={
-                    currentCondition
-                      ? {
-                          fill: `${currentCondition.color}38`,
-                          stroke: currentCondition.color,
-                        }
-                      : undefined
-                  }
                   role="button"
                   tabIndex={anatomyDisabled ? -1 : 0}
                   aria-disabled={anatomyDisabled}
                   aria-label={label}
-                  aria-pressed={Boolean(current)}
+                  aria-pressed={selected}
                   onClick={(event) => {
                     event.stopPropagation();
-                    onToggleAnatomy(tooth, zone);
-                  }}
-                  onContextMenu={(event) => {
-                    event.preventDefault();
-                    onClearAnatomy(tooth, zone);
+                    onSelectAnatomy(tooth, zone);
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      onToggleAnatomy(tooth, zone);
-                    }
-                    if (event.key === "Delete" || event.key === "Backspace") {
-                      event.preventDefault();
-                      onClearAnatomy(tooth, zone);
+                      onSelectAnatomy(tooth, zone);
                     }
                   }}
                 >
@@ -2736,11 +2740,6 @@ function ToothIllustration({
                   d={anatomyGeometry.outline}
                   clipPath={`url(#${anatomyClipId}-${zone})`}
                   vectorEffect="non-scaling-stroke"
-                  style={
-                    currentCondition
-                      ? { stroke: currentCondition.color }
-                      : undefined
-                  }
                   aria-hidden="true"
                 />
               </g>
@@ -2822,6 +2821,24 @@ function ClinicalMarkerPreview({
   const artworkTransform = `scale(${patientLeft ? -1 : 1}, ${
     lower ? -1 : 1
   })`;
+
+  if (marker === "caries") {
+    return (
+      <span className={styles.clinicalMarkerPreview} aria-hidden="true">
+        <svg viewBox="0 0 32 38">
+          <path
+            className={styles.markerPreviewTooth}
+            d="M8 5 C10 2 13 4 16 5 C19 4 22 2 24 5 C27 9 24 16 22 22 C20 29 19 34 16 35 C13 34 12 29 10 22 C8 16 5 9 8 5 Z"
+          />
+          <path
+            className={styles.markerPreviewCaries}
+            d="M17 8 C20 6 24 8 23 12 C22 15 18 16 16 13 C14 11 15 9 17 8 Z"
+            style={{ fill: color }}
+          />
+        </svg>
+      </span>
+    );
+  }
 
   if (marker === "boneLoss") {
     return (

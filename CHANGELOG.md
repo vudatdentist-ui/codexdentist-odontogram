@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+- Restrict the surface color toolbar to caries, fillings, and inlay/onlay.
+- Make direct crown/root interaction select a clinical target without painting
+  the anatomical illustration.
+- Add a crown/root-aware caries clinical marker rendered on the current tooth
+  contour.
+- Continue accepting legacy planned, watch, and anatomical color entries
+  without exposing those retired controls.
+
 ## 0.5.1
 
 - Restore pointer interaction on the SVG crown/root map so direct mouse and

@@ -807,10 +807,6 @@
   stroke-width: 2;
 }
 
-.toothAnatomyZone[data-active="true"] {
-  stroke-width: 1.5;
-}
-
 .toothAnatomyZone[data-selected="true"] {
   fill: rgb(20 123 114 / 14%);
   stroke: #086b63;
@@ -858,6 +854,14 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 3.2;
+}
+
+.markerCaries {
+  fill: #b4232b;
+  stroke: #74151c;
+  stroke-linejoin: round;
+  stroke-width: 0.85;
+  pointer-events: none;
 }
 
 .surfaceMap {
@@ -1261,6 +1265,11 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2.2;
+}
+
+.markerPreviewCaries {
+  stroke: #74151c;
+  stroke-width: 1;
 }
 
 .bridgePreviewConnector {
