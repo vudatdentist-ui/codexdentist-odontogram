@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2
+
+- Allow an empty tooth selection on initial load, after switching dentition,
+  and when the last selected tooth is clicked again.
+- Disable tooth-specific clinical markers and bridges until at least one tooth
+  is selected instead of silently targeting a fallback tooth.
+
 ## 0.3.1
 
 - Align crown/root fills, hover targets, and outlines to the exact source tooth

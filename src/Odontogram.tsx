@@ -292,10 +292,8 @@ function isToothId(value: string): value is ToothId {
 
 function normalizeSelectedTeeth(
   values: readonly string[] | undefined,
-  fallback: ToothId,
 ) {
-  const teeth = [...new Set(values?.filter(isToothId) ?? [])];
-  return teeth.length > 0 ? teeth : [fallback];
+  return [...new Set(values?.filter(isToothId) ?? [])];
 }
 
 function isConditionId(value: unknown): value is ConditionId {
@@ -939,28 +937,22 @@ export function Odontogram({
   const [condition, setCondition] = useState<ConditionId>("caries");
   const [dentition, setDentition] = useState<Dentition>("adult");
   const [internalSelectedTeeth, setInternalSelectedTeeth] = useState<ToothId[]>(
-    () => normalizeSelectedTeeth(defaultSelectedTeeth, "16"),
+    () => normalizeSelectedTeeth(defaultSelectedTeeth),
   );
   const [copied, setCopied] = useState(false);
   const lastNotifiedSnapshot = useRef(JSON.stringify(initialData));
   const selectedTeeth = controlledSelectedTeeth
-    ? normalizeSelectedTeeth(
-        controlledSelectedTeeth,
-        dentition === "adult" ? "16" : "55",
-      )
+    ? normalizeSelectedTeeth(controlledSelectedTeeth)
     : internalSelectedTeeth;
-  const selectedTooth =
-    selectedTeeth.at(-1) ?? (dentition === "adult" ? "16" : "55");
+  const selectedTooth = selectedTeeth.at(-1);
+  const previewTooth = selectedTooth ?? (dentition === "adult" ? "16" : "55");
 
   const setSelectedTeeth = (
     update: ToothId[] | ((current: ToothId[]) => ToothId[]),
   ) => {
     const next =
       typeof update === "function" ? update(selectedTeeth) : update;
-    const normalized = normalizeSelectedTeeth(
-      next,
-      dentition === "adult" ? "16" : "55",
-    );
+    const normalized = normalizeSelectedTeeth(next);
 
     if (!controlledSelectedTeeth) {
       setInternalSelectedTeeth(normalized);
@@ -1097,16 +1089,16 @@ export function Odontogram({
 
   const selectedRows = useMemo(
     () =>
-      toothSurfaces(selectedTooth).map((surface) => ({
-        surface,
-        condition: surfaceState[surfaceKey(selectedTooth, surface)],
-      })),
+      selectedTooth
+        ? toothSurfaces(selectedTooth).map((surface) => ({
+            surface,
+            condition: surfaceState[surfaceKey(selectedTooth, surface)],
+          }))
+        : [],
     [selectedTooth, surfaceState],
   );
-  const selectedToothUnavailable = isToothUnavailable(
-    markerState,
-    selectedTooth,
-  );
+  const selectedToothUnavailable =
+    !selectedTooth || isToothUnavailable(markerState, selectedTooth);
   const normalizedSelectedBridgeTeeth = normalizeBridgeTeeth(selectedTeeth);
   const selectedBridge = normalizedSelectedBridgeTeeth
     ? activeBridges.find(
@@ -1124,9 +1116,7 @@ export function Odontogram({
   const selectTooth = (tooth: ToothId) => {
     setSelectedTeeth((current) => {
       if (current.includes(tooth)) {
-        return current.length === 1
-          ? current
-          : current.filter((selected) => selected !== tooth);
+        return current.filter((selected) => selected !== tooth);
       }
       return [...current, tooth];
     });
@@ -1213,7 +1203,7 @@ export function Odontogram({
   };
 
   const toggleMarker = (marker: ClinicalMarkerId) => {
-    if (readOnly) {
+    if (readOnly || selectedTeeth.length === 0) {
       return;
     }
     const removeFromAll = selectedTeeth.every(
@@ -1379,7 +1369,7 @@ export function Odontogram({
     }
 
     setDentition(nextDentition);
-    setSelectedTeeth([nextDentition === "adult" ? "16" : "55"]);
+    setSelectedTeeth([]);
     setHistory([]);
     setCopied(false);
   };
@@ -1565,31 +1555,41 @@ export function Odontogram({
           <div className={styles.inspectorHeading}>
             <div>
               <span>
-                {selectedTeeth.length > 1
+                {selectedTeeth.length === 0
+                  ? "Lựa chọn"
+                  : selectedTeeth.length > 1
                   ? `${selectedTeeth.length} răng đang chọn`
                   : "Răng đang chọn"}
               </span>
               <h2>
-                {selectedTeeth.length > 1
+                {selectedTeeth.length === 0
+                  ? "Chưa chọn răng"
+                  : selectedTeeth.length > 1
                   ? displayedSelectedTeeth.join(" · ")
                   : `R${selectedTooth}`}
               </h2>
             </div>
             <strong>
-              {selectedTeeth.length > 1
+              {selectedTeeth.length === 0
+                ? "0 răng"
+                : selectedTeeth.length > 1
                 ? "Chọn theo nhóm"
-                : hasMarker(markerState, selectedTooth, "implant") &&
-              hasMarker(markerState, selectedTooth, "crown")
+                : hasMarker(markerState, previewTooth, "implant") &&
+              hasMarker(markerState, previewTooth, "crown")
                 ? "Implant + Mão"
-                : hasMarker(markerState, selectedTooth, "missing")
+                : hasMarker(markerState, previewTooth, "missing")
                 ? "Mất răng"
-                : hasMarker(markerState, selectedTooth, "implant")
+                : hasMarker(markerState, previewTooth, "implant")
                   ? "Implant"
-                  : toothType(selectedTooth)}
+                  : toothType(previewTooth)}
             </strong>
           </div>
 
-          {selectedTeeth.length > 1 ? (
+          {selectedTeeth.length === 0 ? (
+            <div className={styles.multiSelectionSummary}>
+              <span>Chưa chọn răng</span>
+            </div>
+          ) : selectedTeeth.length > 1 ? (
             <div className={styles.multiSelectionSummary}>
               {displayedSelectedTeeth.map((tooth) => (
                 <button
@@ -1606,7 +1606,7 @@ export function Odontogram({
             <>
               <div className={styles.focusTooth}>
                 <SurfaceMap
-                  tooth={selectedTooth}
+                  tooth={previewTooth}
                   state={surfaceState}
                   condition={condition}
                   large
@@ -1622,7 +1622,7 @@ export function Odontogram({
                     key={surface}
                     type="button"
                     disabled={readOnly || selectedToothUnavailable}
-                    onClick={() => setSurface(selectedTooth, surface)}
+                    onClick={() => setSurface(previewTooth, surface)}
                   >
                     <span className={styles.surfaceCode}>{surface}</span>
                     <span>
@@ -1661,7 +1661,9 @@ export function Odontogram({
                   (tooth) =>
                     markerState[markerKey(tooth, marker.id)] === true,
                 ).length;
-                const active = activeCount === selectedTeeth.length;
+                const active =
+                  selectedTeeth.length > 0 &&
+                  activeCount === selectedTeeth.length;
                 const partial = activeCount > 0 && !active;
 
                 return (
@@ -1677,10 +1679,10 @@ export function Odontogram({
                     }
                     onClick={() => toggleMarker(marker.id)}
                     aria-pressed={partial ? "mixed" : active}
-                    disabled={readOnly}
+                    disabled={readOnly || selectedTeeth.length === 0}
                   >
                     <ClinicalMarkerPreview
-                      tooth={selectedTooth}
+                      tooth={previewTooth}
                       marker={marker.id}
                       color={marker.color}
                     />

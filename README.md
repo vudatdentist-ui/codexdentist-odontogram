@@ -111,6 +111,8 @@ Không gọi API trực tiếp ở mỗi lần click trong production. Nên debo
 | `brandHref`, `logoUrl` | Tùy chỉnh liên kết và logo |
 
 `selectedTeeth` dùng mã FDI không có tiền tố `R`, ví dụ `["16", "21"]`.
+Mảng rỗng là trạng thái hợp lệ. Người dùng có thể bỏ chọn toàn bộ răng; các
+công cụ phụ thuộc vào răng sẽ bị khóa cho tới khi có lựa chọn mới.
 
 ## Tích hợp bằng iframe
 

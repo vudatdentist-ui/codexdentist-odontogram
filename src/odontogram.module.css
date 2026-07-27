@@ -885,6 +885,12 @@
   background: #e5f2f0;
 }
 
+.multiSelectionSummary > span {
+  color: var(--od-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .surfaceMapLarge {
   width: 154px;
   max-width: 154px;
