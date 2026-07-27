@@ -16,15 +16,17 @@ const parentOrigin =
 
 function blankSnapshot(): OdontogramData {
   return {
-    version: 1,
-    surfaceState: {},
-    anatomyState: {},
-    markerState: {},
-    bridges: [],
-    quickDiagnosis: {
+    version: 2,
+    entries: [],
+    generalAssessment: {
       both: {},
       upper: {},
       lower: {},
+      notes: {
+        both: "",
+        upper: "",
+        lower: "",
+      },
     },
   };
 }

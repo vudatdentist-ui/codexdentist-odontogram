@@ -10,12 +10,15 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 - Đánh dấu thân/chân trực tiếp trên chính ảnh giải phẫu hiện tại; vùng tô và
   hit target dùng đúng contour/viewBox của từng mẫu răng, không render thêm một
   hình răng thứ hai.
+- Thân/chân răng là phạm vi lâm sàng thực sự: ký hiệu phù hợp được bật theo
+  vùng đang chọn, còn ký hiệu toàn răng vẫn luôn khả dụng.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu
   trên các răng liền nhau.
 - Mất răng vẫn giữ khối xương/nướu; tiêu xương làm hạ mào xương.
-- Chẩn đoán chỉnh nha nhanh cho hai hàm, hàm trên và hàm dưới.
+- Đánh giá tổng quát cho toàn miệng, hàm trên và hàm dưới, gồm tình trạng lợi,
+  cao răng, mảng bám, vệ sinh răng miệng, khớp cắn và nhận xét bổ sung.
 - Ba mốc điều trị độc lập: hiện trạng ban đầu, kết quả kỳ vọng và tiến độ
   hiện tại.
 - Hoàn tác, xuất JSON và giao diện responsive.
@@ -174,19 +177,30 @@ dùng `X-Frame-Options: DENY`.
 
 ```ts
 type OdontogramData = {
-  version: 1;
-  surfaceState: Record<string, "caries" | "existing" | "planned" | "watch">;
-  anatomyState: Record<string, "caries" | "existing" | "planned" | "watch">;
-  markerState: Record<string, true>;
-  bridges: Array<{
+  version: 2;
+  entries: Array<{
     id: string;
-    dentition: "adult" | "primary";
-    teeth: string[];
+    conceptId: string;
+    kind: "condition" | "restoration" | "procedure" | "prosthesis";
+    status: "observed" | "existing" | "planned" | "monitoring";
+    target: {
+      scope: "tooth" | "surface" | "region" | "span";
+      teeth: string[];
+      surface?: "M" | "D" | "B" | "L" | "O" | "I";
+      region?: "crown" | "root";
+      dentition?: "adult" | "primary";
+    };
+    attributes?: Record<string, string | number | boolean>;
   }>;
-  quickDiagnosis: {
+  generalAssessment: {
     both: Record<string, string>;
     upper: Record<string, string>;
     lower: Record<string, string>;
+    notes: {
+      both: string;
+      upper: string;
+      lower: string;
+    };
   };
 };
 
@@ -197,14 +211,13 @@ type OdontogramStagesData = {
 };
 ```
 
-Ví dụ `surfaceState["16.M"] = "caries"` là sâu mặt gần răng 16.
-`anatomyState["16.crown"] = "planned"` là đánh dấu điều trị dự kiến ở thân
-răng 16; vùng còn lại là `root`.
-`markerState["16.pulpitis"] = true` là viêm tủy răng 16.
+Mỗi entry tách riêng khái niệm, trạng thái và mục tiêu. Ví dụ sâu mặt gần răng
+16 dùng `conceptId: "caries"` với target `surface/M`; gãy chân răng 16 dùng
+`conceptId: "marker.fracture"` với target `region/root`.
 
-Snapshot cũ không có `anatomyState` vẫn được đọc với giá trị mặc định rỗng. Mọi
-dữ liệu đầu vào đều được lọc lại theo danh sách răng, mặt răng, vùng giải phẫu,
-marker và giá trị hợp lệ trước khi hiển thị.
+Snapshot `version: 1` vẫn được đọc và tự chuyển sang `version: 2`. Các entry
+chưa được renderer hiện tại nhận biết vẫn được giữ nguyên khi đọc và ghi lại,
+giúp ứng dụng tích hợp có thể mở rộng concept mà không làm mất dữ liệu.
 
 Ứng dụng standalone tự chuyển dữ liệu local storage một snapshot trước đây
 sang `INITIAL` và `CURRENT`; `EXPECTED` bắt đầu trống. Sự kiện iframe mới có

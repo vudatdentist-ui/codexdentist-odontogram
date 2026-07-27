@@ -811,6 +811,18 @@
   stroke-width: 1.5;
 }
 
+.toothAnatomyZone[data-selected="true"] {
+  fill: rgb(20 123 114 / 14%);
+  stroke: #086b63;
+  stroke-dasharray: 2.4 1.8;
+  stroke-width: 2;
+}
+
+.toothAnatomyZone[data-selected="true"] + .toothAnatomyContour {
+  stroke: #086b63;
+  stroke-width: 2;
+}
+
 .bridgeConnector {
   position: absolute;
   z-index: 2;
@@ -954,6 +966,47 @@
   background: #edf4f4;
   color: #4b5b60;
   font-size: 11px;
+}
+
+.selectionScope {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  margin-top: 12px;
+  padding: 9px 10px;
+  border: 1px solid #9fc5c1;
+  border-radius: 6px;
+  background: #edf8f6;
+}
+
+.selectionScope span {
+  grid-column: 1;
+  color: #58716f;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.selectionScope strong {
+  min-width: 0;
+  color: #155f59;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.selectionScope button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  padding: 5px 7px;
+  border: 1px solid #84aca8;
+  border-radius: 5px;
+  background: #ffffff;
+  color: #155f59;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .focusTooth {
@@ -1374,6 +1427,46 @@
   border-color: #438c86;
   background: #dff0ee;
   color: #125d57;
+}
+
+.assessmentNote {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  padding-top: 14px;
+}
+
+.assessmentNote > span {
+  color: #3e4f55;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assessmentNote textarea {
+  width: 100%;
+  min-height: 78px;
+  resize: vertical;
+  padding: 9px 10px 24px;
+  border: 1px solid var(--od-line-strong);
+  border-radius: 6px;
+  background: #fbfcfc;
+  color: var(--od-ink);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.assessmentNote textarea:focus {
+  border-color: #438c86;
+  outline: 2px solid rgb(67 140 134 / 18%);
+}
+
+.assessmentNote small {
+  position: absolute;
+  right: 9px;
+  bottom: 7px;
+  color: var(--od-muted);
+  font-size: 9px;
 }
 
 .inspectorActions {

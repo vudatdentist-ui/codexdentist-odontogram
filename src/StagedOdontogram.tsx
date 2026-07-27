@@ -3,9 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 import {
   Odontogram,
-  type OdontogramData,
   type OdontogramProps,
 } from "./Odontogram";
+import type { OdontogramData } from "./data-model";
 import styles from "./odontogram.module.css";
 
 export const odontogramStageIds = [

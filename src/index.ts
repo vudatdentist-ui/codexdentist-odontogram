@@ -1,8 +1,22 @@
 export {
   Odontogram,
-  type OdontogramData,
   type OdontogramProps,
 } from "./Odontogram";
+export type {
+  GeneralAssessmentScope,
+  GeneralAssessmentState,
+  LegacyOdontogramData,
+  OdontogramData,
+  OdontogramDataInput,
+  OdontogramDentition,
+  OdontogramEntry,
+  OdontogramEntryKind,
+  OdontogramEntryStatus,
+  OdontogramEntryTarget,
+  OdontogramRegion,
+  OdontogramSurface,
+  OdontogramTargetScope,
+} from "./data-model";
 export {
   odontogramStageIds,
   StagedOdontogram,

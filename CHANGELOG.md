@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+- Add the extensible `version: 2` entry model with automatic migration from
+  legacy surface, anatomy, marker, bridge, and quick-diagnosis snapshots.
+- Turn crown/root selection into a clinical target that filters compatible
+  symbols and records root versus crown fractures independently.
+- Replace the occlusion-only dialog with a general assessment for gingiva,
+  calculus, plaque, oral hygiene, occlusion, arch findings, and short notes.
+- Preserve unknown structurally valid entries for forward-compatible
+  integrations.
+
 ## 0.4.0
 
 - Add the standalone treatment stages `Hiện trạng ban đầu`,
