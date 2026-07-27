@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Align crown/root fills, hover targets, and outlines to the exact source tooth
+  contour and SVG viewBox for every supported tooth template.
+- Use the dedicated primary-tooth contour instead of reusing the permanent
+  tooth silhouette.
+
 ## 0.3.0
 
 - Add direct crown/root interaction zones to the existing anatomical tooth

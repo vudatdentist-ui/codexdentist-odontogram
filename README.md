@@ -7,8 +7,9 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 
 - 32 răng vĩnh viễn và 20 răng sữa theo ký hiệu FDI.
 - Đánh dấu độc lập các mặt M, D, B, L và O/I.
-- Đánh dấu thân/chân trực tiếp trên chính ảnh giải phẫu hiện tại; không render
-  thêm một hình răng thứ hai.
+- Đánh dấu thân/chân trực tiếp trên chính ảnh giải phẫu hiện tại; vùng tô và
+  hit target dùng đúng contour/viewBox của từng mẫu răng, không render thêm một
+  hình răng thứ hai.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu

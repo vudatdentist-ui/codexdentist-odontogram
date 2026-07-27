@@ -701,6 +701,75 @@ function toothTemplate(tooth: ToothId): ToothTemplate {
   return "16";
 }
 
+type ToothAnatomyGeometry = {
+  width: number;
+  height: number;
+  outline: string;
+  cervicalY: number;
+  cervicalCenterY: number;
+};
+
+const adultToothOutlines: Record<ToothTemplate, string> = {
+  "11":
+    "M17.2.9c-2.4,4.5-3.3,9.5-3.6,14.5-.3,4.6-.9,9-1.3,13.6-.3,3.2-1.3,6.2-2.8,9-1.6,3.5-3.1,8.2-3.3,12.3-.3,6,2,11.1,8.1,11.1s16.5,1.1,16.5-4.3-.3-11.8-2.3-17-.3-.8-.5-1.2c-1.1-2.4-2.1-5.9-1.9-8.3.5-6.5-1.8-13.8-3-20.3-.4-3.6-1.2-7.1-4.2-9.4",
+  "13":
+    "M17.1,2.3c-.7,1.2-1.6,2.5-2.1,3.9-1.6,5-1.9,11-2.9,16-.7,6.7-3.6,11.9-4.6,18.3-.7,4.1.9,7.7,2.3,11.5,1.4,5.1,4.2,13.2,10.3,11,4.9-2.1,8.4-11.8,9.1-16.8.5-3.6.5-7.8-1.2-11.2s-3-4.9-3.3-8.1c-.8-4.7-1.3-13.3-2.3-17.9-.4-2.6-1.9-4.6-3.6-6.4",
+  "14":
+    "M13.2,18.8c.3,1.9.9,4.3,2.6,5.3,1.5.9,2.9-.4,3.4-1.8,1.7-4.8.3-10.7,2.2-15.5.8-1.7,2.6-1.5,3.4.2,1,1.9,1.1,4.3,1.4,6.5.3,3.8-.7,7.3-1.6,11-1,4-1.2,8.3,0,12.4,1.8,8,7.5,21.1-2,24.4-1.4.2-2.9-.5-4.5-.9-3-1-5.1,1-8,1.5-8.9,1.4-6.7-14.5-4.9-19.4.9-2.3,1.9-4.7,2.1-7.3.3-5.2-1.1-10.8-.8-15.9,0-3.3.5-6.8,1.2-10.1.2-1.7,2.2-5.9,3.9-3.2,1.4,3.9.9,8.8,1.6,12.6,0,0,0,.2,0,.2Z",
+  "16":
+    "M20.1,24.1c1.9.9,3.6-.4,4.2-1.8,2.1-4.8.4-10.7,2.7-15.5,1-1.7,3.2-1.5,4.2.2,1.2,1.9,1.4,4.3,1.7,6.5.4,3.8-.9,7.3-2,11-1.2,4-1.5,8.3,0,12.4,2.2,8,9.3,21.1-2.6,24.4-1.7.2-3.6-.5-5.6-.9-3.7-1-6.4,1-10,1.5-11.1,1.4-8.4-14.5-6-19.4,1.1-2.3,2.4-4.7,2.6-7.3.4-5.2-1.4-10.8-1-15.9,0-3.3.6-6.8,1.5-10.1.2-1.7,2.7-5.9,4.9-3.2,1.7,3.9,1.1,8.8,2,12.6,0,0,1.3,4.5,3.4,5.5Z",
+};
+
+const primaryToothOutlines: Partial<Record<ToothTemplate, string>> = {
+  "11":
+    "M16.4.6c-2.4,4.5-2.5,9.8-2.8,14.8-.3,4.6-.9,9-1.3,13.6-.3,3.2-1.3,6.2-2.8,9-1.6,3.5-3.1,8.2-3.3,12.3-.3,6,2,11.1,8.1,11.1s16.5,1.1,16.5-4.3-.3-11.8-2.3-17-.3-.8-.5-1.2c-1.1-2.4-2.1-5.9-1.9-8.3.5-6.5-1.8-13.8-3-20.3-.4-3.6-1.6-7-4.6-9.3",
+  "13": adultToothOutlines["13"],
+  "14":
+    "M13.1,18.3c.4,3.5,3.9,7.9,6.5,3.3,2.1-4.7.3-10.6,2.6-15.3.4-.8,1.3-1.4,2.2-1.1,2.5,1,2.6,4.6,3,7,.8,5.4-1.8,10.5-2.4,15.8-.4,3.1.2,6.3.9,9.3.7,5.1,4.1,11.4,4.4,16.8.5,6.1-5.3,8.4-10.2,6-1-.6-1.7-1.8-2.9-2-1.9-.2-4.5,2.5-7,3.2-1,.3-2.2.3-3.2,0-6.5-1.9-4.6-13.7-3-18.6,1-2.6,2.3-5.2,2.5-8,.4-5.6-1.2-11.3-.8-16.8,0-2.5.4-5.1.9-7.6.4-1.8.8-3.9,2.2-5.1,1.2-1.1,2.4,0,2.8,1.3,1.2,3.8.8,8,1.5,11.7v.2h0Z",
+};
+
+const toothTemplateWidths: Record<ToothTemplate, number> = {
+  "11": 36,
+  "13": 36,
+  "14": 32.3,
+  "16": 40.6,
+};
+
+function toothAnatomyGeometry(tooth: ToothId): ToothAnatomyGeometry {
+  const template = toothTemplate(tooth);
+  const primaryOutline = primaryToothOutlines[template];
+
+  return {
+    width: toothTemplateWidths[template],
+    height: 64,
+    outline:
+      isPrimaryTooth(tooth) && primaryOutline
+        ? primaryOutline
+        : adultToothOutlines[template],
+    cervicalY: template === "11" || template === "13" ? 32 : 33,
+    cervicalCenterY: template === "11" || template === "13" ? 30 : 31,
+  };
+}
+
+function anatomyClipPath(
+  geometry: ToothAnatomyGeometry,
+  zone: AnatomyZone,
+) {
+  const { width, height, cervicalY, cervicalCenterY } = geometry;
+  const left = -1;
+  const right = width + 1;
+  const firstControl = width * 0.25;
+  const secondControl = width * 0.75;
+
+  if (zone === "root") {
+    return `M${left} -1 H${right} V${cervicalY} C${secondControl} ${cervicalCenterY}, ${firstControl} ${cervicalCenterY}, ${left} ${cervicalY} Z`;
+  }
+
+  return `M${left} ${cervicalY} C${firstControl} ${cervicalCenterY}, ${secondControl} ${cervicalCenterY}, ${right} ${cervicalY} V${
+    height + 1
+  } H${left} Z`;
+}
+
 function toothArtworkPath(
   tooth: ToothId,
   assetBaseUrl: string,
@@ -1962,6 +2031,8 @@ function ToothIllustration({
       : boneLoss
         ? "boneLoss"
         : undefined;
+  const anatomyGeometry = toothAnatomyGeometry(tooth);
+  const anatomyClipId = `tooth-anatomy-${tooth}`;
 
   return (
     <div
@@ -1988,66 +2059,86 @@ function ToothIllustration({
       />
       {!missing && !implant ? (
         <svg
-          className={`${styles.toothAnatomyMap} ${
-            styles[`toothAnatomyTemplate${toothTemplate(tooth)}`]
-          }`}
-          viewBox="0 0 100 100"
+          className={styles.toothAnatomyMap}
+          viewBox={`0 0 ${anatomyGeometry.width} ${anatomyGeometry.height}`}
           role="group"
           aria-label={`Chọn thân hoặc chân răng ${tooth}`}
           style={{ transform: artworkTransform }}
         >
+          <defs>
+            <clipPath id={`${anatomyClipId}-outline`}>
+              <path d={anatomyGeometry.outline} />
+            </clipPath>
+            {(["root", "crown"] as const).map((zone) => (
+              <clipPath id={`${anatomyClipId}-${zone}`} key={zone}>
+                <path d={anatomyClipPath(anatomyGeometry, zone)} />
+              </clipPath>
+            ))}
+          </defs>
           {(["root", "crown"] as const).map((zone) => {
             const current = anatomyState[anatomyKey(tooth, zone)];
             const currentCondition = conditionFor(current);
-            const path =
-              zone === "root"
-                ? "M18 2 H82 C88 20 86 45 76 70 H24 C14 45 12 20 18 2 Z"
-                : "M16 63 C29 57 71 57 84 63 L92 92 C75 100 25 100 8 92 Z";
             const label = `${anatomyNames[zone]} ${tooth}${
               currentCondition ? `, ${currentCondition.label}` : ""
             }. Chọn ${conditionFor(condition)?.label}.`;
+            const zonePath = anatomyClipPath(anatomyGeometry, zone);
 
             return (
-              <path
-                className={styles.toothAnatomyZone}
-                data-active={current ? "true" : "false"}
-                data-zone={zone}
-                d={path}
-                style={
-                  currentCondition
-                    ? {
-                        fill: `${currentCondition.color}38`,
-                        stroke: currentCondition.color,
-                      }
-                    : undefined
-                }
-                role="button"
-                tabIndex={anatomyDisabled ? -1 : 0}
-                aria-disabled={anatomyDisabled}
-                aria-label={label}
-                aria-pressed={Boolean(current)}
-                key={zone}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleAnatomy(tooth, zone);
-                }}
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  onClearAnatomy(tooth, zone);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onToggleAnatomy(tooth, zone);
+              <g key={zone}>
+                <path
+                  className={styles.toothAnatomyZone}
+                  data-active={current ? "true" : "false"}
+                  data-zone={zone}
+                  d={zonePath}
+                  clipPath={`url(#${anatomyClipId}-outline)`}
+                  vectorEffect="non-scaling-stroke"
+                  style={
+                    currentCondition
+                      ? {
+                          fill: `${currentCondition.color}38`,
+                          stroke: currentCondition.color,
+                        }
+                      : undefined
                   }
-                  if (event.key === "Delete" || event.key === "Backspace") {
+                  role="button"
+                  tabIndex={anatomyDisabled ? -1 : 0}
+                  aria-disabled={anatomyDisabled}
+                  aria-label={label}
+                  aria-pressed={Boolean(current)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleAnatomy(tooth, zone);
+                  }}
+                  onContextMenu={(event) => {
                     event.preventDefault();
                     onClearAnatomy(tooth, zone);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onToggleAnatomy(tooth, zone);
+                    }
+                    if (event.key === "Delete" || event.key === "Backspace") {
+                      event.preventDefault();
+                      onClearAnatomy(tooth, zone);
+                    }
+                  }}
+                >
+                  <title>{`${anatomyNames[zone]} ${tooth}`}</title>
+                </path>
+                <path
+                  className={styles.toothAnatomyContour}
+                  d={anatomyGeometry.outline}
+                  clipPath={`url(#${anatomyClipId}-${zone})`}
+                  vectorEffect="non-scaling-stroke"
+                  style={
+                    currentCondition
+                      ? { stroke: currentCondition.color }
+                      : undefined
                   }
-                }}
-              >
-                <title>{`${anatomyNames[zone]} ${tooth}`}</title>
-              </path>
+                  aria-hidden="true"
+                />
+              </g>
             );
           })}
         </svg>

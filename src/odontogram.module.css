@@ -648,33 +648,29 @@
 
 .toothAnatomyMap {
   z-index: 4;
-  inset-inline: auto;
-  left: 15%;
-  width: 70%;
-  overflow: visible;
+  overflow: hidden;
   pointer-events: none;
   transform-origin: center;
-}
-
-.toothAnatomyTemplate14 {
-  left: 18.5%;
-  width: 63%;
-}
-
-.toothAnatomyTemplate16 {
-  left: 10.5%;
-  width: 79%;
 }
 
 .toothAnatomyZone {
   fill: transparent;
   stroke: transparent;
   stroke-linejoin: round;
-  stroke-width: 2.4;
+  stroke-width: 1.25;
   cursor: pointer;
   outline: none;
   pointer-events: all;
   transition: fill 120ms ease, stroke 120ms ease;
+}
+
+.toothAnatomyContour {
+  fill: none;
+  stroke: transparent;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  pointer-events: none;
+  transition: stroke 120ms ease;
 }
 
 .toothAnatomyZone:hover {
@@ -682,14 +678,23 @@
   stroke: #147b72;
 }
 
+.toothAnatomyZone:hover + .toothAnatomyContour {
+  stroke: #147b72;
+}
+
 .toothAnatomyZone:focus-visible {
   fill: rgb(20 123 114 / 16%);
   stroke: #086b63;
-  stroke-width: 4;
+  stroke-width: 2;
+}
+
+.toothAnatomyZone:focus-visible + .toothAnatomyContour {
+  stroke: #086b63;
+  stroke-width: 2;
 }
 
 .toothAnatomyZone[data-active="true"] {
-  stroke-width: 3;
+  stroke-width: 1.5;
 }
 
 .bridgeConnector {
