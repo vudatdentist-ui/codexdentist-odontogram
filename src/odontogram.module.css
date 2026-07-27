@@ -616,7 +616,8 @@
 
 .toothArtwork,
 .toothClinicalArtwork,
-.toothInteractionOverlay {
+.toothInteractionOverlay,
+.toothAnatomyMap {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -642,6 +643,53 @@
 .toothInteractionOverlay {
   z-index: 2;
   overflow: visible;
+  pointer-events: none;
+}
+
+.toothAnatomyMap {
+  z-index: 4;
+  inset-inline: auto;
+  left: 15%;
+  width: 70%;
+  overflow: visible;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.toothAnatomyTemplate14 {
+  left: 18.5%;
+  width: 63%;
+}
+
+.toothAnatomyTemplate16 {
+  left: 10.5%;
+  width: 79%;
+}
+
+.toothAnatomyZone {
+  fill: transparent;
+  stroke: transparent;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+  cursor: pointer;
+  outline: none;
+  pointer-events: all;
+  transition: fill 120ms ease, stroke 120ms ease;
+}
+
+.toothAnatomyZone:hover {
+  fill: rgb(20 123 114 / 12%);
+  stroke: #147b72;
+}
+
+.toothAnatomyZone:focus-visible {
+  fill: rgb(20 123 114 / 16%);
+  stroke: #086b63;
+  stroke-width: 4;
+}
+
+.toothAnatomyZone[data-active="true"] {
+  stroke-width: 3;
 }
 
 .bridgeConnector {
@@ -1572,7 +1620,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .toothCell,
-  .surface {
+  .surface,
+  .toothAnatomyZone {
     transition: none;
   }
 }

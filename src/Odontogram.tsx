@@ -92,6 +92,7 @@ const clinicalMarkerOptions = [
 type ToothId = (typeof allTeeth)[number];
 type Dentition = "adult" | "primary";
 type SurfaceCode = "M" | "D" | "B" | "L" | "O" | "I";
+type AnatomyZone = "crown" | "root";
 type ConditionId = (typeof conditionOptions)[number]["id"];
 type ClinicalMarkerId = (typeof clinicalMarkerOptions)[number]["id"];
 type NativeMarkerId =
@@ -102,6 +103,7 @@ type NativeMarkerId =
   | "crown"
   | "extraction";
 type SurfaceState = Record<string, ConditionId>;
+type AnatomyState = Record<string, ConditionId>;
 type MarkerState = Record<string, true>;
 type BridgeSpan = {
   id: string;
@@ -116,6 +118,7 @@ type QuickDiagnosisState = Record<
 export type OdontogramData = {
   version: 1;
   surfaceState: SurfaceState;
+  anatomyState: AnatomyState;
   markerState: MarkerState;
   bridges: BridgeSpan[];
   quickDiagnosis: QuickDiagnosisState;
@@ -134,6 +137,7 @@ export type OdontogramProps = {
 };
 type HistoryEntry = {
   surfaceState: SurfaceState;
+  anatomyState: AnatomyState;
   markerState: MarkerState;
   bridges: BridgeSpan[];
   quickDiagnosis: QuickDiagnosisState;
@@ -271,6 +275,11 @@ const surfaceNames: Record<SurfaceCode, string> = {
   I: "Incisal",
 };
 
+const anatomyNames: Record<AnatomyZone, string> = {
+  crown: "Thân răng",
+  root: "Chân răng",
+};
+
 const AssetBaseContext = createContext("/odontogram-assets");
 
 function emptyQuickDiagnosis(): QuickDiagnosisState {
@@ -359,6 +368,34 @@ function parseStoredState(value: string | null): SurfaceState {
         );
       }),
     ) as SurfaceState;
+  } catch {
+    return {};
+  }
+}
+
+function parseStoredAnatomyState(value: string | null): AnatomyState {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([key, condition]) => {
+        const [tooth, zone, extra] = key.split(".");
+        return (
+          extra === undefined &&
+          isToothId(tooth) &&
+          (zone === "crown" || zone === "root") &&
+          isConditionId(condition)
+        );
+      }),
+    ) as AnatomyState;
   } catch {
     return {};
   }
@@ -481,9 +518,11 @@ function parseStoredQuickDiagnosis(value: string | null): QuickDiagnosisState {
 
 function normalizeStoredState(
   surfaceState: SurfaceState,
+  anatomyState: AnatomyState,
   markerState: MarkerState,
 ) {
   const nextSurfaces = { ...surfaceState };
+  const nextAnatomy = { ...anatomyState };
   const nextMarkers = { ...markerState };
 
   for (const tooth of allTeeth) {
@@ -496,6 +535,8 @@ function normalizeStoredState(
       for (const surface of toothSurfaces(tooth)) {
         delete nextSurfaces[surfaceKey(tooth, surface)];
       }
+      delete nextAnatomy[anatomyKey(tooth, "crown")];
+      delete nextAnatomy[anatomyKey(tooth, "root")];
       continue;
     }
 
@@ -506,6 +547,8 @@ function normalizeStoredState(
       for (const surface of toothSurfaces(tooth)) {
         delete nextSurfaces[surfaceKey(tooth, surface)];
       }
+      delete nextAnatomy[anatomyKey(tooth, "crown")];
+      delete nextAnatomy[anatomyKey(tooth, "root")];
     }
 
     if (
@@ -523,7 +566,11 @@ function normalizeStoredState(
     }
   }
 
-  return { surfaceState: nextSurfaces, markerState: nextMarkers };
+  return {
+    surfaceState: nextSurfaces,
+    anatomyState: nextAnatomy,
+    markerState: nextMarkers,
+  };
 }
 
 function normalizeDefaultValue(value?: OdontogramData): OdontogramData {
@@ -531,6 +578,7 @@ function normalizeDefaultValue(value?: OdontogramData): OdontogramData {
     return {
       version: 1,
       surfaceState: {},
+      anatomyState: {},
       markerState: {},
       bridges: [],
       quickDiagnosis: emptyQuickDiagnosis(),
@@ -539,12 +587,14 @@ function normalizeDefaultValue(value?: OdontogramData): OdontogramData {
 
   const normalized = normalizeStoredState(
     parseStoredState(JSON.stringify(value.surfaceState)),
+    parseStoredAnatomyState(JSON.stringify(value.anatomyState)),
     parseStoredMarkerState(JSON.stringify(value.markerState)),
   );
 
   return {
     version: 1,
     surfaceState: normalized.surfaceState,
+    anatomyState: normalized.anatomyState,
     markerState: normalized.markerState,
     bridges: parseStoredBridges(JSON.stringify(value.bridges)),
     quickDiagnosis: parseStoredQuickDiagnosis(
@@ -555,6 +605,7 @@ function normalizeDefaultValue(value?: OdontogramData): OdontogramData {
 
 function createDataSnapshot(
   surfaceState: SurfaceState,
+  anatomyState: AnatomyState,
   markerState: MarkerState,
   bridges: BridgeSpan[],
   quickDiagnosis: QuickDiagnosisState,
@@ -562,6 +613,7 @@ function createDataSnapshot(
   return {
     version: 1,
     surfaceState: { ...surfaceState },
+    anatomyState: { ...anatomyState },
     markerState: { ...markerState },
     bridges: bridges.map((bridge) => ({
       ...bridge,
@@ -577,6 +629,10 @@ function createDataSnapshot(
 
 function surfaceKey(tooth: ToothId, surface: SurfaceCode) {
   return `${tooth}.${surface}`;
+}
+
+function anatomyKey(tooth: ToothId, zone: AnatomyZone) {
+  return `${tooth}.${zone}`;
 }
 
 function markerKey(tooth: ToothId, marker: ClinicalMarkerId) {
@@ -700,6 +756,7 @@ function quickDiagnosisSummary(
 
 function buildExportData(
   surfaceState: SurfaceState,
+  anatomyState: AnatomyState,
   markerState: MarkerState,
   bridges: BridgeSpan[],
   quickDiagnosis: QuickDiagnosisState,
@@ -725,11 +782,23 @@ function buildExportData(
       markerName: markerFor(marker as ClinicalMarkerId)?.label ?? marker,
     };
   });
+  const anatomy = Object.entries(anatomyState).map(([key, condition]) => {
+    const [tooth, zone] = key.split(".");
+    return {
+      tooth,
+      dentition,
+      zone,
+      zoneName: anatomyNames[zone as AnatomyZone],
+      condition,
+      conditionName: conditionFor(condition)?.label ?? condition,
+    };
+  });
 
   return {
     notation: "FDI",
     dentition,
     surfaces,
+    anatomy,
     markers,
     bridges,
     quickDiagnosis,
@@ -738,6 +807,7 @@ function buildExportData(
 
 function downloadJson(
   surfaceState: SurfaceState,
+  anatomyState: AnatomyState,
   markerState: MarkerState,
   bridges: BridgeSpan[],
   quickDiagnosis: QuickDiagnosisState,
@@ -748,6 +818,7 @@ function downloadJson(
       JSON.stringify(
         buildExportData(
           surfaceState,
+          anatomyState,
           markerState,
           bridges,
           quickDiagnosis,
@@ -782,6 +853,9 @@ export function Odontogram({
   const [initialData] = useState(() => normalizeDefaultValue(defaultValue));
   const [surfaceState, setSurfaceState] = useState<SurfaceState>(
     initialData.surfaceState,
+  );
+  const [anatomyState, setAnatomyState] = useState<AnatomyState>(
+    initialData.anatomyState,
   );
   const [markerState, setMarkerState] = useState<MarkerState>(
     initialData.markerState,
@@ -828,6 +902,7 @@ export function Odontogram({
   useEffect(() => {
     const snapshot = createDataSnapshot(
       surfaceState,
+      anatomyState,
       markerState,
       bridges,
       quickDiagnosis,
@@ -839,12 +914,25 @@ export function Odontogram({
     lastNotifiedSnapshot.current = serialized;
 
     onChange?.(snapshot);
-  }, [bridges, markerState, onChange, quickDiagnosis, surfaceState]);
+  }, [
+    anatomyState,
+    bridges,
+    markerState,
+    onChange,
+    quickDiagnosis,
+    surfaceState,
+  ]);
 
   const commitSurfaceState = (
     update: (current: SurfaceState) => SurfaceState,
   ) => {
     setSurfaceState(update);
+  };
+
+  const commitAnatomyState = (
+    update: (current: AnatomyState) => AnatomyState,
+  ) => {
+    setAnatomyState(update);
   };
 
   const commitMarkerState = (
@@ -868,6 +956,7 @@ export function Odontogram({
   const saveHistory = () => {
     const snapshot = {
       surfaceState: { ...surfaceState },
+      anatomyState: { ...anatomyState },
       markerState: { ...markerState },
       bridges: bridges.map((bridge) => ({
         ...bridge,
@@ -899,6 +988,15 @@ export function Odontogram({
       ) as SurfaceState,
     [activeToothSet, surfaceState],
   );
+  const activeAnatomyState = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(anatomyState).filter(([key]) =>
+          activeToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as AnatomyState,
+    [activeToothSet, anatomyState],
+  );
   const activeMarkerState = useMemo(
     () =>
       Object.fromEntries(
@@ -913,6 +1011,7 @@ export function Odontogram({
     [bridges, dentition],
   );
   const markedSurfaceCount = Object.keys(activeSurfaceState).length;
+  const markedAnatomyCount = Object.keys(activeAnatomyState).length;
   const markedMarkerCount = Object.keys(activeMarkerState).length;
   const quickDiagnosisCount = Object.values(quickDiagnosis).reduce(
     (total, scope) => total + Object.keys(scope).length,
@@ -921,6 +1020,7 @@ export function Odontogram({
   const markedToothCount = new Set(
     [
       ...Object.keys(activeSurfaceState),
+      ...Object.keys(activeAnatomyState),
       ...Object.keys(activeMarkerState),
       ...activeBridges.flatMap((bridge) => bridge.teeth),
     ].map((key) => key.split(".")[0]),
@@ -1002,6 +1102,47 @@ export function Odontogram({
     });
   };
 
+  const toggleAnatomy = (tooth: ToothId, zone: AnatomyZone) => {
+    if (readOnly || isToothUnavailable(markerState, tooth)) {
+      return;
+    }
+
+    const key = anatomyKey(tooth, zone);
+    const previous = anatomyState[key];
+
+    setSelectedTeeth((current) =>
+      current.includes(tooth) ? current : [...current, tooth],
+    );
+    saveHistory();
+    commitAnatomyState((current) => {
+      const next = { ...current };
+      if (previous === condition) {
+        delete next[key];
+      } else {
+        next[key] = condition;
+      }
+      return next;
+    });
+  };
+
+  const clearAnatomy = (tooth: ToothId, zone: AnatomyZone) => {
+    if (readOnly || isToothUnavailable(markerState, tooth)) {
+      return;
+    }
+
+    const key = anatomyKey(tooth, zone);
+    if (!anatomyState[key]) {
+      return;
+    }
+
+    saveHistory();
+    commitAnatomyState((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  };
+
   const toggleMarker = (marker: ClinicalMarkerId) => {
     if (readOnly) {
       return;
@@ -1013,6 +1154,7 @@ export function Odontogram({
 
     const nextMarkers = { ...markerState };
     const nextSurfaces = { ...surfaceState };
+    const nextAnatomy = { ...anatomyState };
 
     for (const tooth of selectedTeeth) {
       const key = markerKey(tooth, marker);
@@ -1028,12 +1170,15 @@ export function Odontogram({
           for (const surface of toothSurfaces(tooth)) {
             delete nextSurfaces[surfaceKey(tooth, surface)];
           }
+          delete nextAnatomy[anatomyKey(tooth, "crown")];
+          delete nextAnatomy[anatomyKey(tooth, "root")];
         }
       }
     }
 
     commitMarkerState(() => nextMarkers);
     commitSurfaceState(() => nextSurfaces);
+    commitAnatomyState(() => nextAnatomy);
   };
 
   const toggleBridge = () => {
@@ -1093,6 +1238,7 @@ export function Odontogram({
     if (!last) return;
 
     commitSurfaceState(() => last.surfaceState);
+    commitAnatomyState(() => last.anatomyState);
     commitMarkerState(() => last.markerState);
     commitBridges(() => last.bridges);
     commitQuickDiagnosis(() => last.quickDiagnosis);
@@ -1104,6 +1250,7 @@ export function Odontogram({
     const label = dentition === "adult" ? "răng vĩnh viễn" : "răng sữa";
     if (
       (markedSurfaceCount === 0 &&
+        markedAnatomyCount === 0 &&
         markedMarkerCount === 0 &&
         activeBridges.length === 0 &&
         quickDiagnosisCount === 0) ||
@@ -1118,6 +1265,13 @@ export function Odontogram({
           ([key]) => !activeToothSet.has(key.split(".")[0] as ToothId),
         ),
       ) as SurfaceState,
+    );
+    commitAnatomyState((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(
+          ([key]) => !activeToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as AnatomyState,
     );
     commitMarkerState((current) =>
       Object.fromEntries(
@@ -1136,6 +1290,7 @@ export function Odontogram({
     const payload = JSON.stringify(
       buildExportData(
         activeSurfaceState,
+        activeAnatomyState,
         activeMarkerState,
         activeBridges,
         quickDiagnosis,
@@ -1202,6 +1357,7 @@ export function Odontogram({
             disabled={
               readOnly ||
               markedSurfaceCount === 0 &&
+              markedAnatomyCount === 0 &&
               markedMarkerCount === 0 &&
               activeBridges.length === 0 &&
               quickDiagnosisCount === 0
@@ -1265,6 +1421,7 @@ export function Odontogram({
         <div className={styles.toolbarStats}>
           <span><strong>{markedToothCount}</strong> răng</span>
           <span><strong>{markedSurfaceCount}</strong> mặt</span>
+          <span><strong>{markedAnatomyCount}</strong> vùng</span>
           <span><strong>{markedMarkerCount}</strong> dấu</span>
           <span><strong>{activeBridges.length}</strong> cầu</span>
         </div>
@@ -1295,6 +1452,7 @@ export function Odontogram({
             teeth={upperTeeth}
             selectedTeeth={selectedTeeth}
             state={surfaceState}
+            anatomyState={anatomyState}
             markerState={markerState}
             bridges={activeBridges}
             readOnly={readOnly}
@@ -1302,6 +1460,8 @@ export function Odontogram({
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("upper")}
             onSelectTooth={selectTooth}
+            onToggleAnatomy={toggleAnatomy}
+            onClearAnatomy={clearAnatomy}
             onSetSurface={setSurface}
             onClearSurface={clearSurface}
           />
@@ -1317,6 +1477,7 @@ export function Odontogram({
             teeth={lowerTeeth}
             selectedTeeth={selectedTeeth}
             state={surfaceState}
+            anatomyState={anatomyState}
             markerState={markerState}
             bridges={activeBridges}
             readOnly={readOnly}
@@ -1324,6 +1485,8 @@ export function Odontogram({
             condition={condition}
             onOpenDiagnosis={() => setQuickDiagnosisScope("lower")}
             onSelectTooth={selectTooth}
+            onToggleAnatomy={toggleAnatomy}
+            onClearAnatomy={clearAnatomy}
             onSetSurface={setSurface}
             onClearSurface={clearSurface}
           />
@@ -1482,6 +1645,7 @@ export function Odontogram({
               onClick={copyData}
               disabled={
                 markedSurfaceCount === 0 &&
+                markedAnatomyCount === 0 &&
                 markedMarkerCount === 0 &&
                 activeBridges.length === 0 &&
                 quickDiagnosisCount === 0
@@ -1495,6 +1659,7 @@ export function Odontogram({
               onClick={() =>
                 downloadJson(
                   activeSurfaceState,
+                  activeAnatomyState,
                   activeMarkerState,
                   activeBridges,
                   quickDiagnosis,
@@ -1503,6 +1668,7 @@ export function Odontogram({
               }
               disabled={
                 markedSurfaceCount === 0 &&
+                markedAnatomyCount === 0 &&
                 markedMarkerCount === 0 &&
                 activeBridges.length === 0 &&
                 quickDiagnosisCount === 0
@@ -1621,6 +1787,7 @@ function Arch({
   teeth,
   selectedTeeth,
   state,
+  anatomyState,
   markerState,
   bridges,
   readOnly,
@@ -1628,6 +1795,8 @@ function Arch({
   condition,
   onOpenDiagnosis,
   onSelectTooth,
+  onToggleAnatomy,
+  onClearAnatomy,
   onSetSurface,
   onClearSurface,
 }: {
@@ -1635,6 +1804,7 @@ function Arch({
   teeth: readonly ToothId[];
   selectedTeeth: ToothId[];
   state: SurfaceState;
+  anatomyState: AnatomyState;
   markerState: MarkerState;
   bridges: BridgeSpan[];
   readOnly: boolean;
@@ -1642,6 +1812,8 @@ function Arch({
   condition: ConditionId;
   onOpenDiagnosis: () => void;
   onSelectTooth: (tooth: ToothId) => void;
+  onToggleAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
+  onClearAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
   onSetSurface: (tooth: ToothId, surface: SurfaceCode) => void;
   onClearSurface: (tooth: ToothId, surface: SurfaceCode) => void;
 }) {
@@ -1671,7 +1843,12 @@ function Arch({
           const figure = (
             <ToothIllustration
               tooth={tooth}
+              anatomyState={anatomyState}
               markerState={markerState}
+              condition={condition}
+              readOnly={readOnly}
+              onToggleAnatomy={onToggleAnatomy}
+              onClearAnatomy={onClearAnatomy}
               bridgeUnit={
                 bridge
                   ? {
@@ -1738,11 +1915,21 @@ function Arch({
 
 function ToothIllustration({
   tooth,
+  anatomyState,
   markerState,
+  condition,
+  readOnly,
+  onToggleAnatomy,
+  onClearAnatomy,
   bridgeUnit,
 }: {
   tooth: ToothId;
+  anatomyState: AnatomyState;
   markerState: MarkerState;
+  condition: ConditionId;
+  readOnly: boolean;
+  onToggleAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
+  onClearAnatomy: (tooth: ToothId, zone: AnatomyZone) => void;
   bridgeUnit?: {
     first: boolean;
     last: boolean;
@@ -1759,6 +1946,7 @@ function ToothIllustration({
     .map((marker) => marker.id);
   const missing = activeMarkers.includes("missing");
   const implant = activeMarkers.includes("implant");
+  const anatomyDisabled = readOnly || missing || implant;
   const boneLoss = activeMarkers.includes("boneLoss");
   const nativeMarkers = activeMarkers.filter(
     (marker): marker is NativeMarkerId => nativeMarkerIds.has(marker),
@@ -1781,7 +1969,7 @@ function ToothIllustration({
         isPrimaryTooth(tooth) ? styles.primaryToothIllustration : ""
       }`}
       data-tooth={tooth}
-      role="img"
+      role="group"
       aria-label={`${toothType(tooth)} ${tooth}${
         activeMarkers.length > 0
           ? `, ${activeMarkers
@@ -1798,6 +1986,72 @@ function ToothIllustration({
         draggable={false}
         style={{ transform: artworkTransform }}
       />
+      {!missing && !implant ? (
+        <svg
+          className={`${styles.toothAnatomyMap} ${
+            styles[`toothAnatomyTemplate${toothTemplate(tooth)}`]
+          }`}
+          viewBox="0 0 100 100"
+          role="group"
+          aria-label={`Chọn thân hoặc chân răng ${tooth}`}
+          style={{ transform: artworkTransform }}
+        >
+          {(["root", "crown"] as const).map((zone) => {
+            const current = anatomyState[anatomyKey(tooth, zone)];
+            const currentCondition = conditionFor(current);
+            const path =
+              zone === "root"
+                ? "M18 2 H82 C88 20 86 45 76 70 H24 C14 45 12 20 18 2 Z"
+                : "M16 63 C29 57 71 57 84 63 L92 92 C75 100 25 100 8 92 Z";
+            const label = `${anatomyNames[zone]} ${tooth}${
+              currentCondition ? `, ${currentCondition.label}` : ""
+            }. Chọn ${conditionFor(condition)?.label}.`;
+
+            return (
+              <path
+                className={styles.toothAnatomyZone}
+                data-active={current ? "true" : "false"}
+                data-zone={zone}
+                d={path}
+                style={
+                  currentCondition
+                    ? {
+                        fill: `${currentCondition.color}38`,
+                        stroke: currentCondition.color,
+                      }
+                    : undefined
+                }
+                role="button"
+                tabIndex={anatomyDisabled ? -1 : 0}
+                aria-disabled={anatomyDisabled}
+                aria-label={label}
+                aria-pressed={Boolean(current)}
+                key={zone}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleAnatomy(tooth, zone);
+                }}
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  onClearAnatomy(tooth, zone);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onToggleAnatomy(tooth, zone);
+                  }
+                  if (event.key === "Delete" || event.key === "Backspace") {
+                    event.preventDefault();
+                    onClearAnatomy(tooth, zone);
+                  }
+                }}
+              >
+                <title>{`${anatomyNames[zone]} ${tooth}`}</title>
+              </path>
+            );
+          })}
+        </svg>
+      ) : null}
       {bridgeUnit ? (
         <>
           <span

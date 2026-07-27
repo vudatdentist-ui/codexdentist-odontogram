@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Add direct crown/root interaction zones to the existing anatomical tooth
+  artwork without rendering a second tooth image.
+- Persist crown/root conditions in `anatomyState` while accepting older
+  snapshots that omit the field.
+- Include anatomy state in undo, reset, JSON export, missing-tooth and implant
+  conflict handling.
+
 ## 0.2.4
 
 - Make multi-tooth selection the default interaction and remove the separate

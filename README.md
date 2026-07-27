@@ -7,6 +7,8 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 
 - 32 răng vĩnh viễn và 20 răng sữa theo ký hiệu FDI.
 - Đánh dấu độc lập các mặt M, D, B, L và O/I.
+- Đánh dấu thân/chân trực tiếp trên chính ảnh giải phẫu hiện tại; không render
+  thêm một hình răng thứ hai.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu
@@ -165,6 +167,7 @@ dùng `X-Frame-Options: DENY`.
 type OdontogramData = {
   version: 1;
   surfaceState: Record<string, "caries" | "existing" | "planned" | "watch">;
+  anatomyState: Record<string, "caries" | "existing" | "planned" | "watch">;
   markerState: Record<string, true>;
   bridges: Array<{
     id: string;
@@ -180,10 +183,13 @@ type OdontogramData = {
 ```
 
 Ví dụ `surfaceState["16.M"] = "caries"` là sâu mặt gần răng 16.
+`anatomyState["16.crown"] = "planned"` là đánh dấu điều trị dự kiến ở thân
+răng 16; vùng còn lại là `root`.
 `markerState["16.pulpitis"] = true` là viêm tủy răng 16.
 
-Mọi dữ liệu đầu vào đều được lọc lại theo danh sách răng, mặt răng, marker và
-giá trị hợp lệ trước khi hiển thị.
+Snapshot cũ không có `anatomyState` vẫn được đọc với giá trị mặc định rỗng. Mọi
+dữ liệu đầu vào đều được lọc lại theo danh sách răng, mặt răng, vùng giải phẫu,
+marker và giá trị hợp lệ trước khi hiển thị.
 
 ## Quy tắc lưu dữ liệu y tế
 
