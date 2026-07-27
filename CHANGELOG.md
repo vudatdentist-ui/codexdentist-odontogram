@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+- Make multi-tooth selection the default interaction and remove the separate
+  multi-select mode control.
+- Preserve the current tooth group when editing an individual surface.
+
 ## 0.2.3
 
 - Make embedded layouts respond to their host container width so the chart and

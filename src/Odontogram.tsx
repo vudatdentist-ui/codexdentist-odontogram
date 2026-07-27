@@ -4,7 +4,6 @@ import {
   Check,
   Clipboard,
   Download,
-  ListChecks,
   RotateCcw,
   Stethoscope,
   Undo2,
@@ -799,7 +798,6 @@ export function Odontogram({
   const [internalSelectedTeeth, setInternalSelectedTeeth] = useState<ToothId[]>(
     () => normalizeSelectedTeeth(defaultSelectedTeeth, "16"),
   );
-  const [multiSelectEnabled, setMultiSelectEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
   const lastNotifiedSnapshot = useRef(JSON.stringify(initialData));
   const selectedTeeth = controlledSelectedTeeth
@@ -955,11 +953,6 @@ export function Odontogram({
     normalizedSelectedBridgeTeeth ?? selectedTeeth;
 
   const selectTooth = (tooth: ToothId) => {
-    if (!multiSelectEnabled) {
-      setSelectedTeeth([tooth]);
-      return;
-    }
-
     setSelectedTeeth((current) => {
       if (current.includes(tooth)) {
         return current.length === 1
@@ -982,8 +975,9 @@ export function Odontogram({
       return;
     }
 
-    setSelectedTeeth([tooth]);
-    setMultiSelectEnabled(false);
+    setSelectedTeeth((current) =>
+      current.includes(tooth) ? current : [...current, tooth],
+    );
     saveHistory();
     commitSurfaceState((current) => ({ ...current, [key]: condition }));
   };
@@ -1162,7 +1156,6 @@ export function Odontogram({
 
     setDentition(nextDentition);
     setSelectedTeeth([nextDentition === "adult" ? "16" : "55"]);
-    setMultiSelectEnabled(false);
     setHistory([]);
     setCopied(false);
   };
@@ -1241,22 +1234,6 @@ export function Odontogram({
               Răng sữa
             </button>
           </div>
-          <button
-            type="button"
-            className={`${styles.multiSelectButton} ${
-              multiSelectEnabled ? styles.multiSelectActive : ""
-            }`}
-            onClick={() => {
-              setMultiSelectEnabled((current) => !current);
-              if (multiSelectEnabled) {
-                setSelectedTeeth([selectedTooth]);
-              }
-            }}
-            aria-pressed={multiSelectEnabled}
-          >
-            <ListChecks size={16} />
-            Chọn nhiều
-          </button>
           <button
             type="button"
             className={styles.quickDiagnosisButton}

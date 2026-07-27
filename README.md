@@ -9,7 +9,8 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 - Đánh dấu độc lập các mặt M, D, B, L và O/I.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
-- Chọn nhiều răng và tạo cầu trên các răng liền nhau.
+- Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu
+  trên các răng liền nhau.
 - Mất răng vẫn giữ khối xương/nướu; tiêu xương làm hạ mào xương.
 - Chẩn đoán chỉnh nha nhanh cho hai hàm, hàm trên và hàm dưới.
 - Hoàn tác, xuất JSON và giao diện responsive.

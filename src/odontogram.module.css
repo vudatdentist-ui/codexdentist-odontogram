@@ -335,34 +335,6 @@
   box-shadow: 0 1px 3px rgb(21 34 39 / 9%);
 }
 
-.multiSelectButton {
-  min-height: 38px;
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 7px;
-  padding: 0 10px;
-  border: 1px solid var(--od-line);
-  border-radius: 6px;
-  background: var(--od-surface);
-  color: #455258;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.multiSelectButton:hover {
-  border-color: #8aafac;
-  background: #eef6f5;
-}
-
-.multiSelectButton.multiSelectActive {
-  border-color: #438c86;
-  background: #dff0ee;
-  color: #125d57;
-}
-
 .quickDiagnosisButton {
   min-height: 38px;
   display: inline-flex;
