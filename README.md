@@ -16,6 +16,8 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
   trên các răng liền nhau.
 - Mất răng vẫn giữ khối xương/nướu; tiêu xương làm hạ mào xương.
 - Chẩn đoán chỉnh nha nhanh cho hai hàm, hàm trên và hàm dưới.
+- Ba mốc điều trị độc lập: hiện trạng ban đầu, kết quả kỳ vọng và tiến độ
+  hiện tại.
 - Hoàn tác, xuất JSON và giao diện responsive.
 
 ## Chạy thử
@@ -146,14 +148,18 @@ chứa iframe phải truyền origin của chính nó:
       return;
     }
 
-    saveOdontogramToYourApi(event.data.data);
+    saveOdontogramToYourApi({
+      activeStage: event.data.stage,
+      activeSnapshot: event.data.data,
+      stages: event.data.stages,
+    });
   });
 
   frame.addEventListener("load", () => {
     frame.contentWindow.postMessage(
       {
         type: "codexdentist:odontogram-set",
-        data: odontogramLoadedFromYourApi,
+        stages: odontogramStagesLoadedFromYourApi,
       },
       ODONTOGRAM_ORIGIN,
     );
@@ -183,6 +189,12 @@ type OdontogramData = {
     lower: Record<string, string>;
   };
 };
+
+type OdontogramStagesData = {
+  INITIAL: OdontogramData | null;
+  EXPECTED: OdontogramData | null;
+  CURRENT: OdontogramData | null;
+};
 ```
 
 Ví dụ `surfaceState["16.M"] = "caries"` là sâu mặt gần răng 16.
@@ -193,6 +205,11 @@ răng 16; vùng còn lại là `root`.
 Snapshot cũ không có `anatomyState` vẫn được đọc với giá trị mặc định rỗng. Mọi
 dữ liệu đầu vào đều được lọc lại theo danh sách răng, mặt răng, vùng giải phẫu,
 marker và giá trị hợp lệ trước khi hiển thị.
+
+Ứng dụng standalone tự chuyển dữ liệu local storage một snapshot trước đây
+sang `INITIAL` và `CURRENT`; `EXPECTED` bắt đầu trống. Sự kiện iframe mới có
+thêm `stage` và `stages`, đồng thời vẫn giữ `data` là snapshot đang sửa để các
+tích hợp cũ tiếp tục hoạt động.
 
 ## Quy tắc lưu dữ liệu y tế
 

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 demo-dist/
+.playwright-cli/
 public/odontogram-assets/
 *.tsbuildinfo
 *.log

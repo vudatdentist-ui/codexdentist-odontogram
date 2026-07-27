@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   createContext,
+  type ReactNode,
   useContext,
   useEffect,
   useMemo,
@@ -125,6 +126,7 @@ export type OdontogramData = {
 };
 export type OdontogramProps = {
   assetBaseUrl?: string;
+  beforeToolbar?: ReactNode;
   brandHref?: string;
   defaultSelectedTeeth?: string[];
   defaultValue?: OdontogramData;
@@ -907,6 +909,7 @@ function downloadJson(
 
 export function Odontogram({
   assetBaseUrl = "/odontogram-assets",
+  beforeToolbar,
   brandHref = "https://codexdentist.com",
   defaultSelectedTeeth,
   defaultValue,
@@ -1428,6 +1431,8 @@ export function Odontogram({
           </button>
         </div>
       </header> : null}
+
+      {beforeToolbar}
 
       <section className={styles.toolbar} aria-label="Trạng thái bề mặt">
         <div className={styles.toolbarControls}>

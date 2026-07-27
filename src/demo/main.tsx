@@ -1,32 +1,76 @@
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Odontogram, type OdontogramData } from "../index";
+import {
+  StagedOdontogram,
+  type OdontogramData,
+  type OdontogramStagesData,
+  type StagedOdontogramChange,
+} from "../index";
 import "./demo.css";
 
-const storageKey = "codexdentist-odontogram-demo-v1";
+const storageKey = "codexdentist-odontogram-demo-stages-v2";
+const legacyStorageKey = "codexdentist-odontogram-demo-v1";
 const parentOrigin =
   new URLSearchParams(window.location.search).get("parentOrigin") ??
   window.location.origin;
 
-function readStoredData() {
+function blankSnapshot(): OdontogramData {
+  return {
+    version: 1,
+    surfaceState: {},
+    anatomyState: {},
+    markerState: {},
+    bridges: [],
+    quickDiagnosis: {
+      both: {},
+      upper: {},
+      lower: {},
+    },
+  };
+}
+
+function readStoredStages(): OdontogramStagesData {
   try {
-    const value = window.localStorage.getItem(storageKey);
-    return value ? (JSON.parse(value) as OdontogramData) : undefined;
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored) {
+      return parseStages(JSON.parse(stored));
+    }
+
+    const legacy = window.localStorage.getItem(legacyStorageKey);
+    const snapshot = legacy
+      ? (JSON.parse(legacy) as OdontogramData)
+      : blankSnapshot();
+    const migrated = {
+      INITIAL: snapshot,
+      EXPECTED: null,
+      CURRENT: snapshot,
+    } satisfies OdontogramStagesData;
+    persistStages(migrated);
+    return migrated;
   } catch {
-    return undefined;
+    const snapshot = blankSnapshot();
+    return {
+      INITIAL: snapshot,
+      EXPECTED: null,
+      CURRENT: snapshot,
+    };
   }
 }
 
 function Demo() {
-  const [defaultValue, setDefaultValue] = useState<OdontogramData | undefined>(
-    readStoredData,
-  );
+  const [defaultStages, setDefaultStages] =
+    useState<OdontogramStagesData>(readStoredStages);
   const [instanceKey, setInstanceKey] = useState(0);
 
-  const handleChange = useCallback((data: OdontogramData) => {
-    window.localStorage.setItem(storageKey, JSON.stringify(data));
+  const handleChange = useCallback((change: StagedOdontogramChange) => {
+    persistStages(change.stages);
     window.parent.postMessage(
-      { type: "codexdentist:odontogram-change", data },
+      {
+        type: "codexdentist:odontogram-change",
+        data: change.data,
+        stage: change.stage,
+        stages: change.stages,
+      },
       parentOrigin,
     );
   }, []);
@@ -40,7 +84,11 @@ function Demo() {
         return;
       }
 
-      setDefaultValue(event.data.data as OdontogramData);
+      const nextStages = event.data.stages
+        ? parseStages(event.data.stages)
+        : migrateSingleSnapshot(event.data.data as OdontogramData);
+      persistStages(nextStages);
+      setDefaultStages(nextStages);
       setInstanceKey((current) => current + 1);
     };
 
@@ -49,14 +97,43 @@ function Demo() {
   }, []);
 
   return (
-    <Odontogram
-      key={instanceKey}
-      defaultValue={defaultValue}
-      onChange={handleChange}
+    <StagedOdontogram
       assetBaseUrl="/odontogram-assets"
       brandHref="https://codexdentist.com"
+      defaultStages={defaultStages}
+      key={instanceKey}
       logoUrl="/icons/codexmed-icon.svg"
+      onStagesChange={handleChange}
     />
+  );
+}
+
+function parseStages(value: unknown): OdontogramStagesData {
+  const stages =
+    value && typeof value === "object" && "stages" in value
+      ? (value as { stages: Partial<OdontogramStagesData> }).stages
+      : (value as Partial<OdontogramStagesData>);
+  const initial = stages?.INITIAL ?? blankSnapshot();
+
+  return {
+    INITIAL: initial,
+    EXPECTED: stages?.EXPECTED ?? null,
+    CURRENT: stages?.CURRENT ?? initial,
+  };
+}
+
+function migrateSingleSnapshot(snapshot: OdontogramData): OdontogramStagesData {
+  return {
+    INITIAL: snapshot,
+    EXPECTED: null,
+    CURRENT: snapshot,
+  };
+}
+
+function persistStages(stages: OdontogramStagesData) {
+  window.localStorage.setItem(
+    storageKey,
+    JSON.stringify({ version: 2, stages }),
   );
 }
 

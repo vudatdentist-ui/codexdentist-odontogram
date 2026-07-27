@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Add the standalone treatment stages `Hiện trạng ban đầu`,
+  `Kết quả kỳ vọng`, and `Tiến độ hiện tại`.
+- Persist the three snapshots independently and migrate the previous
+  single-chart browser data into the initial and current stages.
+- Extend iframe events with `stage` and `stages` while preserving the legacy
+  active snapshot in `data`.
+
 ## 0.3.3
 
 - Rename the quick inter-arch diagnosis control to `Khớp cắn` so the label
