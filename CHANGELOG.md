@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- Rename the quick inter-arch diagnosis control to `Khớp cắn` so the label
+  matches the occlusal relationship data it records.
+
 ## 0.3.2
 
 - Allow an empty tooth selection on initial load, after switching dentition,

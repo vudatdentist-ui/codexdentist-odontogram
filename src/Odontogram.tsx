@@ -1455,7 +1455,7 @@ export function Odontogram({
             onClick={() => setQuickDiagnosisScope("both")}
           >
             <Stethoscope size={16} />
-            Chẩn đoán nhanh
+            Khớp cắn
             {quickDiagnosisCount > 0 ? <strong>{quickDiagnosisCount}</strong> : null}
           </button>
           <div className={styles.conditionControl}>
@@ -1776,7 +1776,7 @@ export function Odontogram({
             <header>
               <div>
                 <span>Chẩn đoán chỉnh nha</span>
-                <h2 id="quick-diagnosis-title">Chẩn đoán nhanh</h2>
+                <h2 id="quick-diagnosis-title">Khớp cắn</h2>
               </div>
               <button
                 type="button"
