@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- Restore pointer interaction on the SVG crown/root map so direct mouse and
+  touch selection reaches the anatomically clipped regions.
+
 ## 0.5.0
 
 - Add the extensible `version: 2` entry model with automatic migration from
