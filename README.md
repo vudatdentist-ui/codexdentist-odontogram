@@ -11,9 +11,13 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
   hit target dùng đúng contour/viewBox của từng mẫu răng, không render thêm một
   hình răng thứ hai.
 - Mã màu trên sơ đồ 5 mặt chỉ dùng cho sâu răng, mối hàn và inlay/onlay.
+- Sơ đồ 5 mặt ở bảng chi tiết hiển thị mã M/D/B/L/O-I ngay trong từng vùng,
+  không lặp lại danh sách mặt răng ở bên dưới.
 - Thân/chân răng là phạm vi lâm sàng thực sự: ký hiệu phù hợp, gồm sâu răng,
   được áp dụng và hiển thị trên vùng đang chọn; thao tác chọn vùng không tự tô
   màu hình răng.
+- Ký hiệu sâu răng lâm sàng dùng tổn thương màu đen bám sát đường viền giải
+  phẫu, tách biệt với mã màu dùng để đánh dấu mặt răng.
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu
@@ -118,6 +122,7 @@ Không gọi API trực tiếp ở mỗi lần click trong production. Nên debo
 | `embedded` | Ẩn header/footer thương hiệu khi nhúng vào ứng dụng khác |
 | `assetBaseUrl` | URL chứa bộ SVG đã sinh |
 | `brandHref`, `logoUrl` | Tùy chỉnh liên kết và logo |
+| `chartFooter` | Nội dung của ứng dụng tích hợp đặt ngay dưới hai cung răng |
 
 `selectedTeeth` dùng mã FDI không có tiền tố `R`, ví dụ `["16", "21"]`.
 Mảng rỗng là trạng thái hợp lệ. Người dùng có thể bỏ chọn toàn bộ răng; các

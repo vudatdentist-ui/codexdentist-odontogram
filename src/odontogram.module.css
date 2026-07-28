@@ -69,12 +69,14 @@
     width: 120px;
   }
 
-  .embedded .surfaceList {
+  .embedded .clinicalMarkers {
     grid-column: 3;
     grid-row: 1 / span 2;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 
-  .embedded .clinicalMarkers,
   .embedded .inspectorActions {
     grid-column: 1 / -1;
   }
@@ -155,14 +157,16 @@
     padding-inline: 16px;
   }
 
-  .embedded .surfaceList,
   .embedded .clinicalMarkers,
   .embedded .inspectorActions {
     grid-column: 1 / -1;
   }
 
-  .embedded .surfaceList {
-    grid-template-columns: repeat(2, 1fr);
+  .embedded .clinicalMarkers {
+    grid-row: auto;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--od-line);
   }
 }
 
@@ -599,6 +603,13 @@
   padding: 22px 28px 26px;
 }
 
+.chartFooter {
+  width: min(100%, 1120px);
+  margin: 22px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--od-line);
+}
+
 .interarchSummary {
   width: min(100%, 1120px);
   min-height: 36px;
@@ -905,10 +916,11 @@
 }
 
 .markerCaries {
-  fill: #b4232b;
-  stroke: #74151c;
+  fill: #15191b;
+  stroke: #050607;
   stroke-linejoin: round;
-  stroke-width: 0.85;
+  stroke-width: 0.75;
+  filter: drop-shadow(0 0.8px 0.5px rgb(0 0 0 / 22%));
   pointer-events: none;
 }
 
@@ -1163,74 +1175,20 @@
 
 .surfaceLabel {
   fill: #263438;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   pointer-events: none;
 }
 
-.surfaceList {
-  display: grid;
+.surfaceLabelGroup,
+.surfaceLabelBox {
+  pointer-events: none;
 }
 
-.surfaceList button {
-  min-height: 48px;
-  display: grid;
-  grid-template-columns: 30px 1fr 10px;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 4px;
-  border: 0;
-  border-bottom: 1px solid #edf1f2;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.surfaceList button:hover {
-  background: #f5f8f8;
-}
-
-.surfaceList button:disabled {
-  opacity: 0.42;
-  cursor: not-allowed;
-}
-
-.surfaceList button:disabled:hover {
-  background: transparent;
-}
-
-.surfaceCode {
-  width: 27px;
-  height: 27px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--od-line);
-  border-radius: 5px;
-  background: #f8fafb;
-  color: #3a4b50;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.surfaceList button > span:nth-child(2) {
-  display: grid;
-  gap: 2px;
-}
-
-.surfaceList strong {
-  font-size: 12px;
-}
-
-.surfaceList small {
-  color: var(--od-muted);
-  font-size: 11px;
-}
-
-.surfaceList i {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+.surfaceLabelBox {
+  fill: rgb(255 255 255 / 90%);
+  stroke: #b9c5c8;
+  stroke-width: 0.8;
 }
 
 .clinicalMarkers {
@@ -1361,8 +1319,8 @@
 }
 
 .markerPreviewCaries {
-  stroke: #74151c;
-  stroke-width: 1;
+  stroke: #050607;
+  stroke-width: 0.8;
 }
 
 .bridgePreviewConnector {
@@ -1626,7 +1584,6 @@
 .quickDiagnosisDialog button:focus-visible,
 .toothNumber:focus-visible,
 .multiSelectionSummary button:focus-visible,
-.surfaceList button:focus-visible,
 .clinicalMarkerGrid button:focus-visible,
 .inspectorActions button:focus-visible,
 .brand:focus-visible {
@@ -1679,12 +1636,14 @@
     width: 120px;
   }
 
-  .surfaceList {
+  .clinicalMarkers {
     grid-column: 3;
     grid-row: 1 / span 2;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
   }
 
-  .clinicalMarkers,
   .inspectorActions {
     grid-column: 1 / -1;
   }
@@ -1782,13 +1741,12 @@
     padding-inline: 16px;
   }
 
-  .surfaceList {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .clinicalMarkers {
     grid-column: 1 / -1;
+    grid-row: auto;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--od-line);
   }
 
   .clinicalMarkerGrid {
@@ -1929,14 +1887,9 @@
     grid-column: 1;
   }
 
-  .surfaceList,
   .clinicalMarkers,
   .inspectorActions {
     grid-column: 1;
-  }
-
-  .surfaceList {
-    grid-template-columns: 1fr;
   }
 
   .clinicalMarkerGrid {

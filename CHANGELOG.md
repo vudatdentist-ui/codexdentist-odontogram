@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- Render the clinical caries marker as a black, contour-adjacent lesion while
+  keeping surface-condition colors unchanged.
+- Replace the duplicated surface detail list with compact labels inside the
+  large five-surface map.
+- Add the `chartFooter` integration slot directly below both dental arches.
+
 ## 0.7.0
 
 - Reorder the treatment workflow to initial condition, current condition, then

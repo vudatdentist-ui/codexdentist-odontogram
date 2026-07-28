@@ -120,7 +120,7 @@ const clinicalMarkerOptions = [
     id: "caries",
     label: "Sâu răng",
     shortLabel: "SR",
-    color: "#b4232b",
+    color: "#15191b",
     targets: ["crown", "root"],
     defaultTarget: "crown",
     kind: "condition",
@@ -257,6 +257,7 @@ export type OdontogramProps = {
   assetBaseUrl?: string;
   beforeToolbar?: ReactNode;
   brandHref?: string;
+  chartFooter?: ReactNode;
   defaultSelectedTeeth?: string[];
   defaultValue?: OdontogramDataInput;
   embedded?: boolean;
@@ -1250,25 +1251,25 @@ function cariesLesionPath(
   target: AnatomyZone,
 ) {
   const { width, height, cervicalY } = geometry;
-  const centerX = width * (target === "root" ? 0.44 : 0.58);
+  const centerX = width * (target === "root" ? 0.78 : 0.93);
   const centerY =
     target === "root"
-      ? cervicalY * 0.56
-      : cervicalY + (height - cervicalY) * 0.46;
-  const radiusX = width * (target === "root" ? 0.11 : 0.16);
-  const radiusY = height * (target === "root" ? 0.08 : 0.1);
+      ? cervicalY * 0.68
+      : cervicalY + (height - cervicalY) * 0.42;
+  const radiusX = width * (target === "root" ? 0.14 : 0.17);
+  const radiusY = height * (target === "root" ? 0.075 : 0.09);
 
   return [
-    `M${centerX - radiusX} ${centerY - radiusY * 0.15}`,
-    `C${centerX - radiusX * 0.8} ${centerY - radiusY},`,
-    `${centerX - radiusX * 0.05} ${centerY - radiusY * 1.08},`,
-    `${centerX + radiusX * 0.42} ${centerY - radiusY * 0.62}`,
-    `C${centerX + radiusX * 1.08} ${centerY - radiusY * 0.3},`,
-    `${centerX + radiusX * 0.95} ${centerY + radiusY * 0.58},`,
-    `${centerX + radiusX * 0.22} ${centerY + radiusY * 0.86}`,
-    `C${centerX - radiusX * 0.35} ${centerY + radiusY * 1.02},`,
-    `${centerX - radiusX * 1.08} ${centerY + radiusY * 0.58},`,
-    `${centerX - radiusX} ${centerY - radiusY * 0.15} Z`,
+    `M${centerX - radiusX} ${centerY - radiusY * 0.34}`,
+    `C${centerX - radiusX * 0.72} ${centerY - radiusY * 1.04},`,
+    `${centerX + radiusX * 0.05} ${centerY - radiusY * 1.12},`,
+    `${centerX + radiusX * 0.42} ${centerY - radiusY * 0.64}`,
+    `C${centerX + radiusX * 0.9} ${centerY - radiusY * 0.28},`,
+    `${centerX + radiusX} ${centerY + radiusY * 0.34},`,
+    `${centerX + radiusX * 0.28} ${centerY + radiusY * 0.92}`,
+    `C${centerX - radiusX * 0.18} ${centerY + radiusY * 1.08},`,
+    `${centerX - radiusX * 0.88} ${centerY + radiusY * 0.56},`,
+    `${centerX - radiusX} ${centerY - radiusY * 0.34} Z`,
   ].join(" ");
 }
 
@@ -1430,6 +1431,7 @@ export function Odontogram({
   assetBaseUrl = "/odontogram-assets",
   beforeToolbar,
   brandHref = "https://codexdentist.com",
+  chartFooter,
   defaultSelectedTeeth,
   defaultValue,
   embedded = false,
@@ -1634,16 +1636,6 @@ export function Odontogram({
     ].map((key) => key.split(".")[0]),
   ).size;
 
-  const selectedRows = useMemo(
-    () =>
-      selectedTooth
-        ? toothSurfaces(selectedTooth).map((surface) => ({
-            surface,
-            condition: surfaceState[surfaceKey(selectedTooth, surface)],
-          }))
-        : [],
-    [selectedTooth, surfaceState],
-  );
   const selectedToothUnavailable =
     !selectedTooth || isToothUnavailable(markerState, selectedTooth);
   const normalizedSelectedBridgeTeeth = normalizeBridgeTeeth(selectedTeeth);
@@ -2214,6 +2206,10 @@ export function Odontogram({
             onSetSurface={setSurface}
             onClearSurface={clearSurface}
           />
+
+          {chartFooter ? (
+            <div className={styles.chartFooter}>{chartFooter}</div>
+          ) : null}
         </section>
 
         <aside className={styles.inspector}>
@@ -2312,28 +2308,6 @@ export function Odontogram({
                   onSetSurface={setSurface}
                   onClearSurface={clearSurface}
                 />
-              </div>
-
-              <div className={styles.surfaceList}>
-                {selectedRows.map(({ surface, condition: surfaceCondition }) => (
-                  <button
-                    key={surface}
-                    type="button"
-                    disabled={readOnly || selectedToothUnavailable}
-                    onClick={() => setSurface(previewTooth, surface)}
-                  >
-                    <span className={styles.surfaceCode}>{surface}</span>
-                    <span>
-                      <strong>{surfaceNames[surface]}</strong>
-                      <small>
-                        {conditionFor(surfaceCondition)?.label ?? "Chưa đánh dấu"}
-                      </small>
-                    </span>
-                    {surfaceCondition ? (
-                      <i style={{ backgroundColor: conditionFor(surfaceCondition)?.color }} />
-                    ) : null}
-                  </button>
-                ))}
               </div>
             </>
           )}
@@ -2826,13 +2800,15 @@ function ToothIllustration({
             ))}
           </defs>
           {activeMarkers.includes("caries") ? (
-            <path
-              className={styles.markerCaries}
-              d={cariesLesionPath(anatomyGeometry, cariesTarget)}
-              clipPath={`url(#${anatomyClipId}-${cariesTarget})`}
-              vectorEffect="non-scaling-stroke"
-              aria-hidden="true"
-            />
+            <g clipPath={`url(#${anatomyClipId}-outline)`}>
+              <path
+                className={styles.markerCaries}
+                d={cariesLesionPath(anatomyGeometry, cariesTarget)}
+                clipPath={`url(#${anatomyClipId}-${cariesTarget})`}
+                vectorEffect="non-scaling-stroke"
+                aria-hidden="true"
+              />
+            </g>
           ) : null}
           {(["root", "crown"] as const).map((zone) => {
             const selected = selectedAnatomyZone === zone;
@@ -2965,7 +2941,7 @@ function ClinicalMarkerPreview({
           />
           <path
             className={styles.markerPreviewCaries}
-            d="M17 8 C20 6 24 8 23 12 C22 15 18 16 16 13 C14 11 15 9 17 8 Z"
+            d="M22 8 C25 6 28 8 27 12 C27 15 25 17 22 16 C20 14 20 10 22 8 Z"
             style={{ fill: color }}
           />
         </svg>
@@ -3149,17 +3125,34 @@ function SurfaceMap({
         );
       })}
       {large
-        ? ordered.map(({ position, code }) => (
-            <text
-              className={styles.surfaceLabel}
-              x={position === "left" ? 20 : position === "right" ? 80 : 50}
-              y={position === "top" ? 23 : position === "bottom" ? 83 : 55}
-              key={`label-${position}`}
-              textAnchor="middle"
-            >
-              {code}
-            </text>
-          ))
+        ? ordered.map(({ position, code }) => {
+            const x =
+              position === "left" ? 20 : position === "right" ? 80 : 50;
+            const y =
+              position === "top" ? 21 : position === "bottom" ? 79 : 50;
+
+            return (
+              <g className={styles.surfaceLabelGroup} key={`label-${position}`}>
+                <rect
+                  className={styles.surfaceLabelBox}
+                  x={x - 8}
+                  y={y - 8}
+                  width="16"
+                  height="16"
+                  rx="4"
+                />
+                <text
+                  className={styles.surfaceLabel}
+                  x={x}
+                  y={y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {code}
+                </text>
+              </g>
+            );
+          })
         : null}
     </svg>
   );
