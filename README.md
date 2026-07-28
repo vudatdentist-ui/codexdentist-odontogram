@@ -17,12 +17,14 @@ Odontogram FDI 5 mặt mã nguồn mở, dùng được như một React compone
 - Ký hiệu lâm sàng: viêm tủy, viêm quanh răng, tiêu xương, tổn thương quanh
   chóp, implant, điều trị tủy, mão, mất răng, chỉ định nhổ và nứt/gãy.
 - Luôn cho phép chọn nhiều răng; bấm lại để bỏ từng răng khỏi nhóm và tạo cầu
-  trên các răng liền nhau.
+  trên các răng liền nhau. Khối chọn nhiều có lệnh bỏ chọn hoặc xóa toàn bộ
+  trạng thái của đúng nhóm răng đang chọn.
 - Mất răng vẫn giữ khối xương/nướu; tiêu xương làm hạ mào xương.
 - Đánh giá tổng quát cho toàn miệng, hàm trên và hàm dưới, gồm tình trạng lợi,
   cao răng, mảng bám, vệ sinh răng miệng, khớp cắn và nhận xét bổ sung.
-- Ba mốc điều trị độc lập: hiện trạng ban đầu, kết quả kỳ vọng và tiến độ
-  hiện tại.
+- Ba mốc điều trị độc lập theo luồng: hiện trạng ban đầu, tình trạng hiện tại
+  và kết quả kỳ vọng; có thể reset riêng một mốc hoặc cả ba mốc sau khi xác
+  nhận.
 - Hoàn tác, xuất JSON và giao diện responsive.
 
 ## Chạy thử
@@ -208,8 +210,8 @@ type OdontogramData = {
 
 type OdontogramStagesData = {
   INITIAL: OdontogramData | null;
-  EXPECTED: OdontogramData | null;
   CURRENT: OdontogramData | null;
+  EXPECTED: OdontogramData | null;
 };
 ```
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { Ellipsis, Trash2 } from "lucide-react";
 import {
   Odontogram,
   type OdontogramProps,
@@ -10,8 +11,8 @@ import styles from "./odontogram.module.css";
 
 export const odontogramStageIds = [
   "INITIAL",
-  "EXPECTED",
   "CURRENT",
+  "EXPECTED",
 ] as const;
 
 export type OdontogramStage = (typeof odontogramStageIds)[number];
@@ -26,7 +27,7 @@ export type StagedOdontogramChange = {
 };
 export type StagedOdontogramProps = Omit<
   OdontogramProps,
-  "beforeToolbar" | "defaultValue" | "onChange"
+  "beforeToolbar" | "defaultValue" | "hideResetAction" | "onChange"
 > & {
   defaultStages?: Partial<OdontogramStagesData>;
   defaultValue?: OdontogramData;
@@ -36,7 +37,7 @@ export type StagedOdontogramProps = Omit<
 const stageLabels: Record<OdontogramStage, string> = {
   INITIAL: "Hiện trạng ban đầu",
   EXPECTED: "Kết quả kỳ vọng",
-  CURRENT: "Tiến độ hiện tại",
+  CURRENT: "Tình trạng hiện tại",
 };
 
 const stageDescriptions: Record<OdontogramStage, string> = {
@@ -61,6 +62,7 @@ export function StagedOdontogram({
   const stagesRef = useRef(stages);
   const [activeStage, setActiveStage] =
     useState<OdontogramStage>("INITIAL");
+  const [resetMenuOpen, setResetMenuOpen] = useState(false);
   const [chartVersions, setChartVersions] = useState<
     Record<OdontogramStage, number>
   >({
@@ -70,9 +72,9 @@ export function StagedOdontogram({
   });
 
   const initialSnapshot = stages.INITIAL;
-  const expectedSnapshot = stages.EXPECTED ?? initialSnapshot;
-  const currentSnapshot =
-    stages.CURRENT ?? expectedSnapshot ?? initialSnapshot;
+  const currentSnapshot = stages.CURRENT ?? initialSnapshot;
+  const expectedSnapshot =
+    stages.EXPECTED ?? currentSnapshot ?? initialSnapshot;
   const activeSnapshot =
     activeStage === "INITIAL"
       ? initialSnapshot
@@ -80,12 +82,13 @@ export function StagedOdontogram({
         ? expectedSnapshot
         : currentSnapshot;
   const previousSnapshot =
-    activeStage === "EXPECTED"
+    activeStage === "CURRENT"
       ? initialSnapshot
-      : activeStage === "CURRENT"
-        ? expectedSnapshot
+      : activeStage === "EXPECTED"
+        ? currentSnapshot
         : null;
   const hasInitialStage = initialSnapshot !== null;
+  const readOnly = odontogramProps.readOnly ?? false;
 
   const publishStages = useCallback(
     (
@@ -126,6 +129,7 @@ export function StagedOdontogram({
     }
 
     setActiveStage(stage);
+    setResetMenuOpen(false);
     onSelectionChange?.([]);
   };
 
@@ -143,6 +147,56 @@ export function StagedOdontogram({
       ...current,
       [activeStage]: current[activeStage] + 1,
     }));
+    setResetMenuOpen(false);
+    onSelectionChange?.([]);
+  };
+
+  const resetActiveStage = () => {
+    if (readOnly || !activeSnapshot) {
+      return;
+    }
+    if (
+      !window.confirm(
+        `Xóa toàn bộ trạng thái trong “${stageLabels[activeStage]}”?`,
+      )
+    ) {
+      return;
+    }
+
+    const blank = createEmptyOdontogramData();
+    const next = {
+      ...stagesRef.current,
+      [activeStage]: blank,
+    };
+    publishStages(activeStage, blank, next);
+    setChartVersions((current) => ({
+      ...current,
+      [activeStage]: current[activeStage] + 1,
+    }));
+    setResetMenuOpen(false);
+    onSelectionChange?.([]);
+  };
+
+  const resetAllStages = () => {
+    if (readOnly || !hasInitialStage) {
+      return;
+    }
+    if (!window.confirm("Xóa toàn bộ trạng thái của cả 3 mốc điều trị?")) {
+      return;
+    }
+
+    const next = {
+      INITIAL: createEmptyOdontogramData(),
+      CURRENT: createEmptyOdontogramData(),
+      EXPECTED: createEmptyOdontogramData(),
+    };
+    publishStages(activeStage, next[activeStage], next);
+    setChartVersions((current) => ({
+      INITIAL: current.INITIAL + 1,
+      CURRENT: current.CURRENT + 1,
+      EXPECTED: current.EXPECTED + 1,
+    }));
+    setResetMenuOpen(false);
     onSelectionChange?.([]);
   };
 
@@ -179,6 +233,40 @@ export function StagedOdontogram({
               Sao chép mốc trước
             </button>
           ) : null}
+          {!readOnly ? (
+            <div className={styles.stageResetMenu}>
+              <button
+                aria-expanded={resetMenuOpen}
+                aria-label="Mở thao tác xóa"
+                className={styles.stageMenuTrigger}
+                onClick={() => setResetMenuOpen((current) => !current)}
+                title="Thao tác xóa"
+                type="button"
+              >
+                <Ellipsis size={17} />
+              </button>
+              {resetMenuOpen ? (
+                <div className={styles.stageResetPopover}>
+                  <button
+                    disabled={!activeSnapshot}
+                    onClick={resetActiveStage}
+                    type="button"
+                  >
+                    <Trash2 size={14} />
+                    Xóa mốc đang mở
+                  </button>
+                  <button
+                    disabled={!hasInitialStage}
+                    onClick={resetAllStages}
+                    type="button"
+                  >
+                    <Trash2 size={14} />
+                    Xóa cả 3 mốc
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
@@ -189,6 +277,7 @@ export function StagedOdontogram({
       {...odontogramProps}
       beforeToolbar={stageNavigation}
       defaultValue={activeSnapshot ?? undefined}
+      hideResetAction
       key={`${activeStage}:${chartVersions[activeStage]}`}
       onChange={handleChange}
       onSelectionChange={onSelectionChange}
@@ -204,7 +293,24 @@ function createInitialStages(
 
   return {
     INITIAL: initial,
-    EXPECTED: defaultStages?.EXPECTED ?? null,
     CURRENT: defaultStages?.CURRENT ?? initial,
+    EXPECTED: defaultStages?.EXPECTED ?? null,
+  };
+}
+
+function createEmptyOdontogramData(): OdontogramData {
+  return {
+    version: 2,
+    entries: [],
+    generalAssessment: {
+      both: {},
+      upper: {},
+      lower: {},
+      notes: {
+        both: "",
+        upper: "",
+        lower: "",
+      },
+    },
   };
 }

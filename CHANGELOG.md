@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+- Reorder the treatment workflow to initial condition, current condition, then
+  expected result.
+- Add compact multi-selection actions to deselect all teeth or clear every
+  condition attached to the selected teeth.
+- Add explicit, confirmed actions to clear the active stage or all three
+  treatment stages.
+- Keep clear operations undoable inside an active chart and include preserved
+  extension entries in clear and undo behavior.
+
 ## 0.6.0
 
 - Restrict the surface color toolbar to caries, fillings, and inlay/onlay.

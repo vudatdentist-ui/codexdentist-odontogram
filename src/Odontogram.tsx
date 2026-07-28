@@ -5,6 +5,7 @@ import {
   Clipboard,
   ClipboardList,
   Download,
+  Trash2,
   RotateCcw,
   Undo2,
   X,
@@ -259,6 +260,7 @@ export type OdontogramProps = {
   defaultSelectedTeeth?: string[];
   defaultValue?: OdontogramDataInput;
   embedded?: boolean;
+  hideResetAction?: boolean;
   logoUrl?: string;
   onChange?: (data: OdontogramData) => void;
   onSelectionChange?: (teeth: string[]) => void;
@@ -1431,6 +1433,7 @@ export function Odontogram({
   defaultSelectedTeeth,
   defaultValue,
   embedded = false,
+  hideResetAction = false,
   logoUrl = "/icons/codexmed-icon.svg",
   onChange,
   onSelectionChange,
@@ -1453,7 +1456,7 @@ export function Odontogram({
   const [quickDiagnosis, setQuickDiagnosis] = useState<QuickDiagnosisState>(
     initialData.quickDiagnosis,
   );
-  const [extraEntries] = useState<OdontogramEntry[]>(
+  const [extraEntries, setExtraEntries] = useState<OdontogramEntry[]>(
     initialData.extraEntries,
   );
   const [quickDiagnosisScope, setQuickDiagnosisScope] =
@@ -1606,6 +1609,11 @@ export function Odontogram({
     () => bridges.filter((bridge) => bridge.dentition === dentition),
     [bridges, dentition],
   );
+  const activeExtraEntryCount = extraEntries.filter((entry) =>
+    entry.target.teeth.some((tooth) =>
+      activeToothSet.has(tooth as ToothId),
+    ),
+  ).length;
   const markedSurfaceCount = Object.keys(activeSurfaceState).length;
   const markedAnatomyCount = Object.keys(activeAnatomyState).length;
   const markedMarkerCount = Object.keys(activeMarkerState).length;
@@ -1651,6 +1659,29 @@ export function Odontogram({
   const bridgeAvailable = normalizedSelectedBridgeTeeth !== null;
   const displayedSelectedTeeth =
     normalizedSelectedBridgeTeeth ?? selectedTeeth;
+  const selectedToothSet = useMemo(
+    () => new Set<ToothId>(selectedTeeth),
+    [selectedTeeth],
+  );
+  const selectedTeethHaveState =
+    selectedTeeth.length > 0 &&
+    (Object.keys(surfaceState).some((key) =>
+      selectedToothSet.has(key.split(".")[0] as ToothId),
+    ) ||
+      Object.keys(anatomyState).some((key) =>
+        selectedToothSet.has(key.split(".")[0] as ToothId),
+      ) ||
+      Object.keys(markerState).some((key) =>
+        selectedToothSet.has(key.split(".")[0] as ToothId),
+      ) ||
+      bridges.some((bridge) =>
+        bridge.teeth.some((tooth) => selectedToothSet.has(tooth)),
+      ) ||
+      extraEntries.some((entry) =>
+        entry.target.teeth.some((tooth) =>
+          selectedToothSet.has(tooth as ToothId),
+        ),
+      ));
 
   const selectTooth = (tooth: ToothId) => {
     setSelectedAnatomyZone(null);
@@ -1660,6 +1691,77 @@ export function Odontogram({
       }
       return [...current, tooth];
     });
+  };
+
+  const clearSelection = () => {
+    setSelectedTeeth([]);
+    setSelectedAnatomyZone(null);
+  };
+
+  const clearSelectedTeethState = () => {
+    if (readOnly || !selectedTeethHaveState) {
+      return;
+    }
+
+    const affectedBridgeCount = bridges.filter((bridge) =>
+      bridge.teeth.some((tooth) => selectedToothSet.has(tooth)),
+    ).length;
+    const bridgeNote =
+      affectedBridgeCount > 0
+        ? ` ${affectedBridgeCount} cầu răng liên quan cũng sẽ bị xóa.`
+        : "";
+    if (
+      !window.confirm(
+        `Xóa mọi trạng thái của ${selectedTeeth.length} răng đang chọn?${bridgeNote}`,
+      )
+    ) {
+      return;
+    }
+
+    saveHistory();
+    commitSurfaceState((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(
+          ([key]) => !selectedToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as SurfaceState,
+    );
+    commitAnatomyState((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(
+          ([key]) => !selectedToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as AnatomyState,
+    );
+    commitMarkerState((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(
+          ([key]) => !selectedToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as MarkerState,
+    );
+    commitMarkerTargetState((current) =>
+      Object.fromEntries(
+        Object.entries(current).filter(
+          ([key]) => !selectedToothSet.has(key.split(".")[0] as ToothId),
+        ),
+      ) as MarkerTargetState,
+    );
+    commitBridges((current) =>
+      current.filter(
+        (bridge) =>
+          !bridge.teeth.some((tooth) => selectedToothSet.has(tooth)),
+      ),
+    );
+    setExtraEntries((current) =>
+      current.filter(
+        (entry) =>
+          !entry.target.teeth.some((tooth) =>
+            selectedToothSet.has(tooth as ToothId),
+          ),
+      ),
+    );
+    clearSelection();
   };
 
   const setSurface = (tooth: ToothId, surface: SurfaceCode) => {
@@ -1840,6 +1942,7 @@ export function Odontogram({
     commitMarkerTargetState(() => last.markerTargetState);
     commitBridges(() => last.bridges);
     commitQuickDiagnosis(() => last.quickDiagnosis);
+    setExtraEntries(last.extraEntries.map(cloneEntry));
     setHistory((current) => current.slice(0, -1));
   };
 
@@ -1851,6 +1954,7 @@ export function Odontogram({
         markedAnatomyCount === 0 &&
         markedMarkerCount === 0 &&
         activeBridges.length === 0 &&
+        activeExtraEntryCount === 0 &&
         quickDiagnosisCount === 0) ||
       !window.confirm(`Xóa toàn bộ đánh dấu của bộ ${label}?`)
     ) {
@@ -1888,7 +1992,16 @@ export function Odontogram({
     commitBridges((current) =>
       current.filter((bridge) => bridge.dentition !== dentition),
     );
+    setExtraEntries((current) =>
+      current.filter(
+        (entry) =>
+          !entry.target.teeth.some((tooth) =>
+            activeToothSet.has(tooth as ToothId),
+          ),
+      ),
+    );
     commitQuickDiagnosis(() => emptyQuickDiagnosis());
+    clearSelection();
   };
 
   const copyData = async () => {
@@ -1957,23 +2070,26 @@ export function Odontogram({
           >
             <Undo2 size={18} />
           </button>
-          <button
-            className={styles.iconButton}
-            type="button"
-            onClick={reset}
-            disabled={
-              readOnly ||
-              markedSurfaceCount === 0 &&
-              markedAnatomyCount === 0 &&
-              markedMarkerCount === 0 &&
-              activeBridges.length === 0 &&
-              quickDiagnosisCount === 0
-            }
-            aria-label="Xóa toàn bộ"
-            title="Xóa toàn bộ"
-          >
-            <RotateCcw size={18} />
-          </button>
+          {!hideResetAction ? (
+            <button
+              className={styles.iconButton}
+              type="button"
+              onClick={reset}
+              disabled={
+                readOnly ||
+                markedSurfaceCount === 0 &&
+                markedAnatomyCount === 0 &&
+                markedMarkerCount === 0 &&
+                activeBridges.length === 0 &&
+                activeExtraEntryCount === 0 &&
+                quickDiagnosisCount === 0
+              }
+              aria-label="Xóa bộ răng đang mở"
+              title="Xóa bộ răng đang mở"
+            >
+              <RotateCcw size={18} />
+            </button>
+          ) : null}
         </div>
       </header> : null}
 
@@ -2118,20 +2234,20 @@ export function Odontogram({
                   : `R${selectedTooth}`}
               </h2>
             </div>
-            <strong>
-              {selectedTeeth.length === 0
-                ? "0 răng"
-                : selectedTeeth.length > 1
-                ? "Chọn theo nhóm"
-                : hasMarker(markerState, previewTooth, "implant") &&
+            {selectedTeeth.length > 1 ? null : (
+              <strong>
+                {selectedTeeth.length === 0
+                  ? "0 răng"
+                  : hasMarker(markerState, previewTooth, "implant") &&
               hasMarker(markerState, previewTooth, "crown")
-                ? "Implant + Mão"
-                : hasMarker(markerState, previewTooth, "missing")
-                ? "Mất răng"
-                : hasMarker(markerState, previewTooth, "implant")
-                  ? "Implant"
-                  : toothType(previewTooth)}
-            </strong>
+                  ? "Implant + Mão"
+                  : hasMarker(markerState, previewTooth, "missing")
+                    ? "Mất răng"
+                    : hasMarker(markerState, previewTooth, "implant")
+                      ? "Implant"
+                      : toothType(previewTooth)}
+              </strong>
+            )}
           </div>
 
           {selectedTeeth.length > 0 && selectedAnatomyZone ? (
@@ -2156,16 +2272,33 @@ export function Odontogram({
             </div>
           ) : selectedTeeth.length > 1 ? (
             <div className={styles.multiSelectionSummary}>
-              {displayedSelectedTeeth.map((tooth) => (
-                <button
-                  type="button"
-                  key={tooth}
-                  onClick={() => selectTooth(tooth)}
-                  aria-label={`Bỏ chọn răng ${tooth}`}
-                >
-                  R{tooth}
+              <div className={styles.multiSelectionActions}>
+                <button type="button" onClick={clearSelection}>
+                  <X size={14} />
+                  Bỏ chọn tất cả
                 </button>
-              ))}
+                <button
+                  className={styles.destructiveAction}
+                  disabled={readOnly || !selectedTeethHaveState}
+                  onClick={clearSelectedTeethState}
+                  type="button"
+                >
+                  <Trash2 size={14} />
+                  Xóa trạng thái
+                </button>
+              </div>
+              <div className={styles.selectedToothChips}>
+                {displayedSelectedTeeth.map((tooth) => (
+                  <button
+                    type="button"
+                    key={tooth}
+                    onClick={() => selectTooth(tooth)}
+                    aria-label={`Bỏ chọn răng ${tooth}`}
+                  >
+                    R{tooth}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <>

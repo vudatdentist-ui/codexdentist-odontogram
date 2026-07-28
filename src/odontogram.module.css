@@ -61,7 +61,6 @@
 
   .embedded .multiSelectionSummary {
     grid-column: 2 / -1;
-    min-height: 150px;
     margin: 0;
     border: 1px solid var(--od-line);
   }
@@ -365,6 +364,55 @@
   min-height: 34px;
   padding: 0 10px;
   white-space: nowrap;
+}
+
+.stageResetMenu {
+  position: relative;
+}
+
+.stageContextActions .stageMenuTrigger {
+  display: inline-grid;
+  min-height: 34px;
+  padding: 0;
+  place-items: center;
+  width: 34px;
+}
+
+.stageResetPopover {
+  background: var(--od-surface);
+  border: 1px solid var(--od-line);
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgb(25 45 48 / 16%);
+  display: grid;
+  gap: 3px;
+  padding: 5px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 178px;
+  z-index: 30;
+}
+
+.stageContextActions .stageResetPopover button {
+  align-items: center;
+  border: 0;
+  color: #b42318;
+  display: flex;
+  gap: 7px;
+  justify-content: flex-start;
+  min-height: 34px;
+  padding: 0 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.stageContextActions .stageResetPopover button:hover:not(:disabled) {
+  background: #fff1f2;
+}
+
+.stageContextActions .stageResetPopover button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .savedState {
@@ -1026,20 +1074,65 @@
 }
 
 .multiSelectionSummary {
-  min-height: 184px;
-  display: flex;
-  align-content: center;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  gap: 12px;
   margin: 16px 0;
-  padding: 18px;
+  padding: 12px;
   border-block: 1px solid var(--od-line);
   background: #f7fafa;
 }
 
-.multiSelectionSummary button {
+.multiSelectionActions,
+.selectedToothChips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.multiSelectionActions {
+  justify-content: flex-end;
+}
+
+.multiSelectionActions button {
+  align-items: center;
+  background: var(--od-surface);
+  border: 1px solid var(--od-line);
+  border-radius: 5px;
+  color: var(--od-ink);
+  display: inline-flex;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 9px;
+  cursor: pointer;
+}
+
+.multiSelectionActions button:hover {
+  background: #edf4f4;
+}
+
+.multiSelectionActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.multiSelectionActions .destructiveAction {
+  border-color: #fecaca;
+  color: #b42318;
+}
+
+.multiSelectionActions .destructiveAction:hover:not(:disabled) {
+  background: #fff1f2;
+}
+
+.selectedToothChips {
+  justify-content: center;
+}
+
+.selectedToothChips button {
   min-width: 52px;
   height: 36px;
   border: 1px solid #8dbbb6;
@@ -1052,7 +1145,7 @@
   cursor: pointer;
 }
 
-.multiSelectionSummary button:hover {
+.selectedToothChips button:hover {
   background: #e5f2f0;
 }
 
@@ -1532,6 +1625,7 @@
 .interarchSummary:focus-visible,
 .quickDiagnosisDialog button:focus-visible,
 .toothNumber:focus-visible,
+.multiSelectionSummary button:focus-visible,
 .surfaceList button:focus-visible,
 .clinicalMarkerGrid button:focus-visible,
 .inspectorActions button:focus-visible,
@@ -1577,7 +1671,6 @@
 
   .multiSelectionSummary {
     grid-column: 2 / -1;
-    min-height: 150px;
     margin: 0;
     border: 1px solid var(--od-line);
   }
@@ -1834,7 +1927,6 @@
 
   .multiSelectionSummary {
     grid-column: 1;
-    min-height: 130px;
   }
 
   .surfaceList,
