@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2
+
+- Keep the general-assessment dialog inside the viewport at every supported
+  screen size, with vertical scrolling only.
+- Allow long headings, scope labels, and assessment options to shrink or wrap
+  without forcing horizontal modal scrolling.
+
 ## 0.8.1
 
 - Enlarge and reposition the contour-clipped caries marker for clearer clinical
