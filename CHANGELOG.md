@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+- Enlarge and reposition the contour-clipped caries marker for clearer clinical
+  visibility.
+- Tighten the spacing above embedded chart footer workflows.
+
 ## 0.8.0
 
 - Render the clinical caries marker as a black, contour-adjacent lesion while

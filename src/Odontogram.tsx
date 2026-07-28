@@ -1251,13 +1251,13 @@ function cariesLesionPath(
   target: AnatomyZone,
 ) {
   const { width, height, cervicalY } = geometry;
-  const centerX = width * (target === "root" ? 0.78 : 0.93);
+  const centerX = width * (target === "root" ? 0.75 : 0.89);
   const centerY =
     target === "root"
       ? cervicalY * 0.68
       : cervicalY + (height - cervicalY) * 0.42;
-  const radiusX = width * (target === "root" ? 0.14 : 0.17);
-  const radiusY = height * (target === "root" ? 0.075 : 0.09);
+  const radiusX = width * (target === "root" ? 0.18 : 0.23);
+  const radiusY = height * (target === "root" ? 0.11 : 0.135);
 
   return [
     `M${centerX - radiusX} ${centerY - radiusY * 0.34}`,
